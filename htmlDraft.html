@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Drug Interaction Word Web</title>
+    <!-- Include vis-network CDN for the Flourish-like graph engine -->
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; background: #f4f6f9; }
+        #mynetwork {
+            width: 100vw;
+            height: 80vh;
+            background-color: #ffffff;
+            border-bottom: 1px solid #ddd;
+        }
+        #info-panel {
+            padding: 20px;
+            background: white;
+            height: 20vh;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- This is your core framework responsibility: the visualization canvas -->
+    <div id="mynetwork"></div>
+    
+    <div id="info-panel">
+        <h3>Interaction Details</h3>
+        <p id="selected-info">Click on a drug node or connection line to see patient safety details.</p>
+    </div>
+
+    <script>
+        // 1. Define your Nodes (Drugs)
+        // In your final app, your backend teammate will feed this data into your component
+        const nodes = new vis.DataSet([
+            { id: 1, label: 'Aspirin', color: '#4CAF50', font: { color: 'white' }, title: 'Blood thinner' },
+            { id: 2, label: 'Ibuprofen', color: '#FF9800', font: { color: 'white' }, title: 'NSAID Painkiller' },
+            { id: 3, label: 'Warfarin', color: '#F44336', font: { color: 'white' }, title: 'Strong Anticoagulant' },
+            { id: 4, label: 'Acetaminophen', color: '#4CAF50', font: { color: 'white' }, title: 'Pain reliever / Fever reducer' }
+        ]);
+
+        // 2. Define your Edges (Interactions between drugs)
+        const edges = new vis.DataSet([
+            // Aspirin + Warfarin = High Risk (Red line)
+            { from: 1, to: 3, color: { color: '#F44336' }, width: 4, label: 'High Bleeding Risk', title: 'Severe: Combined use significantly increases bleeding risk.' },
+            // Ibuprofen + Warfarin = High Risk (Red line)
+            { from: 2, to: 3, color: { color: '#F44336' }, width: 4, label: 'Stomach Bleeding', title: 'Severe: NSAIDs with warfarin can cause GI bleeding.' },
+            // Aspirin + Ibuprofen = Moderate Risk (Orange line)
+            { from: 1, to: 2, color: { color: '#FF9800' }, width: 2, label: 'Reduced Efficacy', title: 'Moderate: Ibuprofen may interfere with the antiplatelet effect of aspirin.' }
+        ]);
+
+        // 3. Configure the Network Layout & Physics (The "Flourish" feel)
+        const container = document.getElementById('mynetwork');
+        const data = { nodes: nodes, edges: edges };
+        const options = {
+            nodes: {
+                shape: 'dot',
+                size: 25,
+                scaling: { min: 20, max: 40 }
+            },
+            edges: {
+                font: { align: 'horizontal', size: 12 },
+                smooth: { type: 'cubicBezier' }
+            },
+            physics: {
+                barnesHut: {
+                    gravitationalConstant: -2000,
+                    centralGravity: 0.3,
+                    springLength: 95
+                }
+            },
+            interaction: { hover: true, tooltipDelay: 200 }
+        };
+
+        // Initialize the network graph
+        const network = new vis.Network(container, data, options);
+
+        // 4. Add Interactivity (Clicking nodes/edges to update the info panel)
+        network.on("click", function (params) {
+            if (params.nodes.length > 0) {
+                let nodeId = params.nodes[0];
+                let nodeData = nodes.get(nodeId);
+                document.getElementById('selected-info').innerHTML = 
+                    `<strong>Drug Selected:</strong> ${nodeData.label} — <em>${nodeData.title}</em>`;
+            } else if (params.edges.length > 0) {
+                let edgeId = params.edges[0];
+                let edgeData = edges.get(edgeId);
+                document.getElementById('selected-info').innerHTML = 
+                    `<strong>Interaction Warning:</strong> ${edgeData.title}`;
+            }
+        });
+    </script>
+</body>
+</html>
