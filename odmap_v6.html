@@ -2,9 +2,29 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<title>ODMAP — Drug Interaction Network</title>
+<title>RxMap — Drug Interaction Network</title>
+<!-- D3 v7 (classic global; the 2D renderer + a few utilities use window.d3) -->
 <script src="https://d3js.org/d3.v7.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- 3D stack (classic UMD globals), modeled after vasturiano's 3d-force-graph:
+     ThreeJS/WebGL + d3-force-3d. Plain <script> tags load reliably without needing
+     import-map support or an ESM CDN. three-spritetext + our custom node objects
+     use the same window.THREE loaded here. -->
+<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+<script src="https://unpkg.com/three-spritetext@1.8.2/dist/three-spritetext.min.js"></script>
+<script src="https://unpkg.com/3d-force-graph@1.73.4/dist/3d-force-graph.min.js"></script>
+<!-- Signal readiness for the app: these UMD scripts are synchronous, so by the
+     time the body's app script runs the globals exist (or they failed to load,
+     in which case the app gracefully stays in 2D). -->
+<script>
+  window.addEventListener("DOMContentLoaded",function(){
+    window.__graphLibsReady = true;
+    if(typeof ForceGraph3D==="undefined" || typeof THREE==="undefined"){
+      window.__force3DUnavailable = true;
+      console.warn("3D libraries not available — the app will run in 2D.");
+    }
+    document.dispatchEvent(new Event("graphlibsready"));
+  });
+</script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:#f5f0e8;color:#2d3a2e;font-family:'Segoe UI',sans-serif;display:flex;flex-direction:column;height:100vh;overflow:hidden}
@@ -12,6 +32,13 @@
   #header{background:#2d3a2e;border-bottom:2px solid #4a6741;padding:8px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0;flex-wrap:wrap}
   #header h1{font-size:1.15rem;color:#b8d4a8;letter-spacing:2px;font-weight:700;white-space:nowrap}
   #header .subtitle{font-size:.75rem;color:#7a9e72;white-space:nowrap}
+
+  /* 2D / 3D segmented toggle */
+  #view-toggle{display:inline-flex;border:1px solid #4a6741;border-radius:7px;overflow:hidden;flex-shrink:0}
+  .vt-btn{background:#3d4f3e;color:#b8d4a8;border:none;padding:5px 12px;font-size:.78rem;font-weight:700;cursor:pointer;letter-spacing:.5px}
+  .vt-btn+.vt-btn{border-left:1px solid #4a6741}
+  .vt-btn:hover{background:#4a6741}
+  .vt-btn.active{background:#8fbe7c;color:#1d281e}
 
   #breadcrumb-wrap{flex:1;display:flex;align-items:center;overflow-x:auto;min-width:0;max-width:420px;scrollbar-width:thin;scrollbar-color:#4a6741 transparent}
   #breadcrumb-wrap::-webkit-scrollbar{height:3px}
@@ -37,6 +64,27 @@
   .hist-chip{background:#3d4f3e;border:1px solid #4a6741;border-radius:12px;padding:3px 10px;font-size:.75rem;cursor:pointer;color:#b8d4a8;white-space:nowrap}
   .hist-chip:hover{background:#4a6741}
 
+  /* ── Autocomplete dropdown (shared by both search inputs and the saved-list input) ── */
+  .ac-dropdown{position:absolute;z-index:1300;background:#fff;border:1px solid #c5b99a;border-radius:8px;box-shadow:0 6px 20px #0003;max-height:230px;overflow-y:auto;min-width:150px;padding:4px;scrollbar-width:thin;scrollbar-color:#c5b99a transparent;display:none}
+  .ac-dropdown::-webkit-scrollbar{width:6px}
+  .ac-dropdown::-webkit-scrollbar-thumb{background:#c5b99a;border-radius:3px}
+  .ac-item{padding:6px 10px;font-size:.82rem;color:#2d3a2e;border-radius:5px;cursor:pointer;display:flex;align-items:baseline;gap:7px;white-space:nowrap}
+  .ac-item:hover,.ac-item.active{background:#e3eedd}
+  .ac-item .ac-alt{font-size:.7rem;color:#8a7e6a}
+  .ac-item .ac-match{font-weight:700;color:#2d6a22}
+  .ac-empty{padding:7px 10px;font-size:.78rem;color:#8a7e6a}
+  /* "Not in our list — add it?" confirmation popup */
+  #adddrug-modal{position:fixed;inset:0;background:#2d3a2e55;z-index:2000;display:none;align-items:center;justify-content:center}
+  #adddrug-box{background:#f0ebe0;border:1px solid #c5b99a;border-radius:12px;padding:20px 22px;max-width:340px;box-shadow:0 10px 40px #0005;text-align:center}
+  #adddrug-box p{font-size:.9rem;color:#2d3a2e;line-height:1.5;margin-bottom:16px}
+  #adddrug-box p b{color:#4a6741}
+  .adddrug-btns{display:flex;gap:10px;justify-content:center}
+  .adddrug-btn{padding:7px 20px;border-radius:7px;cursor:pointer;font-size:.85rem;font-weight:600;border:1px solid transparent}
+  .adddrug-btn.yes{background:#4a6741;color:#e8f0e4}
+  .adddrug-btn.yes:hover{background:#5a7d50}
+  .adddrug-btn.no{background:#e8e0d0;color:#5a5040;border-color:#c5b99a}
+  .adddrug-btn.no:hover{background:#ddd5c2}
+
   #search-result{position:fixed;top:56px;right:20px;background:#f0ebe0;border:1px solid #c5b99a;border-radius:8px;padding:14px 18px;z-index:999;display:none;max-width:320px;font-size:.85rem;line-height:1.6;color:#2d3a2e;box-shadow:0 4px 16px #0002}
   #search-result h3{color:#4a6741;margin-bottom:6px}
   #search-result .close-btn{float:right;cursor:pointer;color:#8a7e6a}
@@ -52,34 +100,14 @@
   .saved-item{background:#d8eecf;border:1px solid #a0c896;border-radius:12px;padding:3px 10px;font-size:.78rem;color:#2d4a28;display:flex;align-items:center;gap:5px}
   .saved-item .si-remove{cursor:pointer;color:#c0392b;font-size:.85rem}
 
-  /* ── BACKEND ADD-ON: account button + sync status (does not alter teammate styles) ── */
-  #account-btn{background:#3d4f3e;border:1px solid #8fbe7c;color:#b8d4a8;padding:5px 11px;border-radius:6px;cursor:pointer;font-size:.78rem;font-weight:600;white-space:nowrap;flex-shrink:0}
-  #account-btn:hover{background:#4a6741}
-  #saved-sync-status{font-size:.72rem;color:#7a6e5a;margin-bottom:8px;min-height:1em}
-  #saved-sync-status.synced{color:#3a5e34}
-  #saved-sync-status.error{color:#c0392b}
-  #auth-overlay{position:fixed;inset:0;background:#0007;backdrop-filter:blur(2px);z-index:2000;display:none;align-items:center;justify-content:center}
-  #auth-overlay.open{display:flex}
-  #auth-modal{position:relative;background:#f0ebe0;border:1px solid #c5b99a;border-radius:12px;padding:26px 28px;width:340px;max-width:92vw;box-shadow:0 10px 40px #0004;color:#2d3a2e}
-  .auth-close{position:absolute;top:12px;right:14px;cursor:pointer;color:#8a7e6a;font-size:1.1rem}
-  .auth-close:hover{color:#2d3a2e}
-  #auth-title{font-size:1.15rem;color:#2d3a2e;margin-bottom:4px}
-  .auth-sub{font-size:.8rem;color:#7a6e5a;margin-bottom:16px}
-  #auth-form{display:flex;flex-direction:column;gap:10px}
-  #auth-form input{background:#fff;border:1px solid #c5b99a;border-radius:6px;padding:9px 11px;font-size:.88rem;color:#2d3a2e}
-  #auth-form input:focus{outline:none;border-color:#4a6741}
-  #auth-submit{background:#4a6741;border:none;color:#e8f0e4;padding:10px;border-radius:6px;cursor:pointer;font-size:.9rem;font-weight:600;margin-top:4px}
-  #auth-submit:hover{background:#5a7d50}
-  #auth-submit:disabled{opacity:.6;cursor:default}
-  #auth-msg{font-size:.78rem;min-height:1em;line-height:1.4}
-  #auth-msg.error{color:#c0392b}
-  #auth-msg.success{color:#3a5e34}
-  .auth-switch{margin-top:16px;font-size:.8rem;color:#7a6e5a;text-align:center}
-  .auth-switch a{color:#4a6741;cursor:pointer;font-weight:600;text-decoration:underline;margin-left:4px}
-
   #main{display:flex;flex:1;overflow:hidden}
   #graph-area{flex:1;position:relative}
-  svg{width:100%;height:100%}
+  /* Two interchangeable graph hosts, stacked; only the active view is shown. */
+  #graph3d{position:absolute;inset:0;background:#f5f0e8;transition:opacity .4s}
+  #graph3d canvas{display:block}
+  #graph2d{position:absolute;inset:0;width:100%;height:100%;display:none}
+  /* keep the tiny legend swatch SVGs sized as before (no longer a global rule) */
+  #legend svg{width:28px;height:10px}
 
   /* The right-hand panel is a vertical stack that can hold any number of cards
      (drug cards and/or an interaction card). Adjacent cards are separated by a
@@ -101,7 +129,15 @@
   .ingredient-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:2px}
   .pronunc-btn.ingredient{font-size:.72rem;padding:2px 7px}
   .card-body{padding:12px 18px;flex:1}
-  .card-section-title{font-size:.68rem;color:#7a6e5a;text-transform:uppercase;letter-spacing:1px;margin-top:12px;margin-bottom:3px;font-weight:600}
+  /* Thin divider line between each section inside a card (not above the first). */
+  .card-section-title{font-size:.68rem;color:#7a6e5a;text-transform:uppercase;letter-spacing:1px;margin-top:12px;margin-bottom:3px;font-weight:600;border-top:1px solid #d5cbb3;padding-top:11px}
+  .card-body > .card-section-title:first-child{border-top:none;padding-top:0;margin-top:0}
+  /* Negative-interactions list: scrollable once it exceeds ~3 drug entries. */
+  .icard-list{display:flex;flex-direction:column;gap:0}
+  .icard-list.scroll{max-height:268px;overflow-y:auto;padding-right:4px;scrollbar-width:thin;scrollbar-color:#c5b99a transparent;border:1px solid #d5cbb3;border-radius:6px;background:#f7f2e8}
+  .icard-list.scroll::-webkit-scrollbar{width:6px}
+  .icard-list.scroll::-webkit-scrollbar-thumb{background:#c5b99a;border-radius:3px}
+  .icard-list.scroll .icard:first-child{margin-top:7px}
   .card-val{font-size:.83rem;color:#2d3a2e;line-height:1.5}
   .similar-chip{display:inline-block;background:#d8eecf;border:1px solid #a0c896;border-radius:10px;padding:2px 9px;font-size:.74rem;color:#3a5e34;margin:2px 2px 2px 0;cursor:pointer}
   .similar-chip:hover{background:#c5e0ba}
@@ -142,11 +178,14 @@
 <body>
 
 <div id="header">
-  <h1>⬡ ODMAP</h1>
+  <h1>⬡ RxMap</h1>
   <div class="subtitle">Drug Interaction Network</div>
+  <div id="view-toggle" title="Switch between 2D and 3D layouts">
+    <button id="vt-2d" class="vt-btn" onclick="setViewMode('2d')">2D</button>
+    <button id="vt-3d" class="vt-btn active" onclick="setViewMode('3d')">3D</button>
+  </div>
   <div id="breadcrumb-wrap"><div id="breadcrumb-inner"></div></div>
   <button id="saved-btn" onclick="toggleSavedPanel()">💊 Saved List</button>
-  <button id="account-btn" onclick="onAccountClick()">👤 Log in</button>
   <div id="search-area">
     <input id="drug1" placeholder="Drug 1" autocomplete="off"/>
     <input id="drug2" placeholder="Drug 2" autocomplete="off"/>
@@ -161,31 +200,11 @@
 <div id="saved-panel">
   <span class="sp-close" onclick="toggleSavedPanel()">✕</span>
   <h3>💊 My Saved Prescriptions</h3>
-  <div id="saved-sync-status"></div>
   <div id="saved-input-row">
     <input id="saved-input" placeholder="Add drug name…" autocomplete="off"/>
     <button id="saved-add-btn" onclick="addToSaved()">Add</button>
   </div>
   <div id="saved-list-items"></div>
-</div>
-
-<!-- ── BACKEND ADD-ON: auth modal ── -->
-<div id="auth-overlay" onclick="if(event.target===this)closeAuthModal()">
-  <div id="auth-modal">
-    <span class="auth-close" onclick="closeAuthModal()">✕</span>
-    <h2 id="auth-title">Log in to ODMAP</h2>
-    <p class="auth-sub">Save your prescription list to your account.</p>
-    <form id="auth-form" onsubmit="return submitAuth(event)">
-      <input id="auth-email" type="email" placeholder="Email" autocomplete="username" required/>
-      <input id="auth-password" type="password" placeholder="Password (min 6 chars)" autocomplete="current-password" minlength="6" required/>
-      <div id="auth-msg"></div>
-      <button id="auth-submit" type="submit">Log in</button>
-    </form>
-    <div class="auth-switch">
-      <span id="auth-switch-text">New here?</span>
-      <a id="auth-switch-link" onclick="toggleAuthMode()">Create an account</a>
-    </div>
-  </div>
 </div>
 
 <div id="search-result">
@@ -194,9 +213,20 @@
   <div id="sr-body"></div>
 </div>
 
+<div id="adddrug-modal">
+  <div id="adddrug-box">
+    <p id="adddrug-msg"></p>
+    <div class="adddrug-btns">
+      <button class="adddrug-btn yes" id="adddrug-yes">Yes</button>
+      <button class="adddrug-btn no" id="adddrug-no">No</button>
+    </div>
+  </div>
+</div>
+
 <div id="main">
   <div id="graph-area">
-    <svg id="svg"></svg>
+    <div id="graph3d"></div>
+    <svg id="graph2d"></svg>
     <div id="legend">
       <div class="leg-title">Severity <span style="text-transform:none;font-weight:400;color:#8a7e6a">(color only)</span></div>
       <div class="leg-row"><svg width="28" height="10"><line x1="0" y1="5" x2="28" y2="5" stroke="#c0392b" stroke-width="2.5"/></svg> Severe</div>
@@ -272,110 +302,14 @@ let currentRoot   = "Warfarin";
 let clickTrail    = [];
 let history       = [];
 let savedList     = [];
-let simulation;
-let rotationTimer = null;
 let isInteracting = false;
 let idleTimeout   = null;
 let currentNodes  = [];
-// position cache: remember where nodes were so we can animate FROM their last position
-let posCache      = {};   // { drugName: {x, y} }
-
-// ─── BACKEND ADD-ON: SUPABASE AUTH + SAVED-LIST SYNC ──────────────────────────
-// 1. Create / reuse a Supabase project at https://supabase.com
-// 2. Run supabase_setup.sql in the SQL editor (creates the saved_lists table).
-// 3. Paste your Project URL and the public "anon" key below
-//    (Dashboard > Project Settings > API). The anon key is safe in client code;
-//    Row Level Security keeps each user limited to their own saved list.
-const SUPABASE_URL  = "YOUR_SUPABASE_URL";   // e.g. https://abcd1234.supabase.co
-const SUPABASE_ANON = "YOUR_SUPABASE_ANON_KEY";
-
-let sb = null;
-let currentUser = null;
-let authMode = "login";
-
-function supabaseConfigured(){
-  return window.supabase && SUPABASE_URL.startsWith("http") && SUPABASE_ANON && !SUPABASE_ANON.startsWith("YOUR_");
-}
-async function initAuth(){
-  if(!supabaseConfigured()){ setAccountButton(null); return; }
-  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
-  const { data } = await sb.auth.getSession();
-  currentUser = data.session?.user || null;
-  setAccountButton(currentUser);
-  if(currentUser) await loadSavedFromCloud();
-  sb.auth.onAuthStateChange((_event, session)=>{
-    currentUser = session?.user || null;
-    setAccountButton(currentUser);
-  });
-}
-function setAccountButton(user){
-  const btn=document.getElementById("account-btn");
-  btn.textContent = user ? "👤 " + (user.email||"Account") + "  ·  Log out" : "👤 Log in";
-}
-function onAccountClick(){ currentUser ? logout() : openAuthModal(); }
-function openAuthModal(){
-  if(!supabaseConfigured()){
-    alert("Login isn't configured yet.\n\nAdd your Supabase URL and anon key near the top of the script in odmap_v6.html (see SUPABASE_SETUP.md).");
-    return;
-  }
-  document.getElementById("auth-overlay").classList.add("open");
-  document.getElementById("auth-msg").textContent="";
-  document.getElementById("auth-email").focus();
-}
-function closeAuthModal(){ document.getElementById("auth-overlay").classList.remove("open"); }
-function toggleAuthMode(){
-  authMode = authMode==="login" ? "signup" : "login";
-  const isLogin = authMode==="login";
-  document.getElementById("auth-title").textContent = isLogin ? "Log in to ODMAP" : "Create your ODMAP account";
-  document.getElementById("auth-submit").textContent = isLogin ? "Log in" : "Sign up";
-  document.getElementById("auth-switch-text").textContent = isLogin ? "New here?" : "Already have an account?";
-  document.getElementById("auth-switch-link").textContent = isLogin ? "Create an account" : "Log in instead";
-  document.getElementById("auth-password").autocomplete = isLogin ? "current-password" : "new-password";
-  document.getElementById("auth-msg").textContent="";
-}
-function setAuthMsg(text, kind){ const el=document.getElementById("auth-msg"); el.textContent=text; el.className=kind||""; }
-async function submitAuth(e){
-  e.preventDefault();
-  const email=document.getElementById("auth-email").value.trim();
-  const password=document.getElementById("auth-password").value;
-  const btn=document.getElementById("auth-submit");
-  btn.disabled=true; setAuthMsg("Working…","");
-  try{
-    if(authMode==="signup"){
-      const { data, error } = await sb.auth.signUp({ email, password });
-      if(error) throw error;
-      if(!data.session){ setAuthMsg("Account created. Check your email to confirm, then log in.","success"); toggleAuthMode(); return false; }
-      currentUser=data.user; await pushSavedToCloud();
-    } else {
-      const { data, error } = await sb.auth.signInWithPassword({ email, password });
-      if(error) throw error;
-      currentUser=data.user; await loadSavedFromCloud();
-    }
-    setAccountButton(currentUser);
-    closeAuthModal();
-  } catch(err){ setAuthMsg(err.message || "Authentication failed.","error"); }
-  finally{ btn.disabled=false; }
-  return false;
-}
-async function logout(){ if(sb) await sb.auth.signOut(); currentUser=null; setAccountButton(null); setSyncStatus(""); }
-function setSyncStatus(text, kind){ const el=document.getElementById("saved-sync-status"); if(!el)return; el.textContent=text; el.className=kind||""; }
-async function loadSavedFromCloud(){
-  if(!sb || !currentUser) return;
-  try{
-    const { data, error } = await sb.from("saved_lists").select("drugs").eq("user_id", currentUser.id).maybeSingle();
-    if(error) throw error;
-    if(data && Array.isArray(data.drugs)){ savedList = data.drugs.slice(); renderSavedList(); refreshGraph(); }
-    setSyncStatus("Synced to your account","synced");
-  } catch(err){ setSyncStatus("Could not load saved list: "+(err.message||err),"error"); }
-}
-async function pushSavedToCloud(){
-  if(!sb || !currentUser) return;   // not logged in -> stays local only
-  try{
-    const { error } = await sb.from("saved_lists").upsert({ user_id: currentUser.id, drugs: savedList, updated_at: new Date().toISOString() });
-    if(error) throw error;
-    setSyncStatus("Saved to your account","synced");
-  } catch(err){ setSyncStatus("Sync failed: "+(err.message||err),"error"); }
-}
+let viewMode      = "3d";   // "3d" (ThreeJS) | "2d" (D3/SVG) — toggled from header
+// position caches: remember where nodes were so rebuilds animate FROM last
+// position. Kept per-mode so 2D screen coords never mix with 3D-space coords.
+let posCache      = {};   // 2D: { drugName: {x, y} }  (screen coords)
+let posCache3D    = {};   // 3D: { drugName: {x, y, z} } (world coords)
 
 // ─── NAME RESOLUTION ───────────────────────────────────────────────────────────
 // Resolve any user-typed name to a canonical drug key. Matches (case-insensitively):
@@ -401,16 +335,134 @@ function resolveDrugName(input){
   return null;
 }
 
-// ─── HISTORY DROPDOWN ─────────────────────────────────────────────────────────
+// ─── AUTOCOMPLETE ──────────────────────────────────────────────────────────────
+// Master list of selectable drug names: canonical brand keys + all alternative
+// names + the active ingredients, plus any names the user chooses to add. Kept
+// sorted alphabetically (case-insensitive) and deduped.
+let userAddedDrugs = [];   // names the user added via the "not in our list" prompt
+function allDrugNames(){
+  const set=new Map();   // lowercased -> display name (first seen wins)
+  const add=n=>{ if(n && !set.has(n.toLowerCase())) set.set(n.toLowerCase(), n); };
+  Object.keys(ALL_DRUGS).forEach(k=>{
+    add(k);
+    (ALL_DRUGS[k].similar||[]).forEach(add);
+    if(ALL_DRUGS[k].ingredient) add(ALL_DRUGS[k].ingredient);
+  });
+  userAddedDrugs.forEach(add);
+  return [...set.values()].sort((a,b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
+}
+function isKnownDrugName(name){
+  if(!name)return false;
+  const q=name.trim().toLowerCase();
+  return allDrugNames().some(n=>n.toLowerCase()===q);
+}
+
+// Attach an autocomplete dropdown to a text input.
+//  onPick(value) runs when the user selects/commits a name.
+function attachAutocomplete(input, onPick){
+  const drop=document.createElement("div");
+  drop.className="ac-dropdown";
+  document.body.appendChild(drop);
+  let items=[], active=-1;
+
+  function position(){
+    const r=input.getBoundingClientRect();
+    drop.style.left=r.left+"px";
+    drop.style.top=(r.bottom+4)+"px";
+    drop.style.minWidth=r.width+"px";
+  }
+  function matches(q){
+    const names=allDrugNames();
+    if(!q) return names;                               // show full list when empty
+    const ql=q.toLowerCase();
+    // Prefer prefix matches, then substring matches; keep alphabetical within each.
+    const starts=names.filter(n=>n.toLowerCase().startsWith(ql));
+    const contains=names.filter(n=>!n.toLowerCase().startsWith(ql)&&n.toLowerCase().includes(ql));
+    return [...starts,...contains];
+  }
+  function hl(name,q){
+    if(!q) return name;
+    const i=name.toLowerCase().indexOf(q.toLowerCase());
+    if(i<0) return name;
+    return name.slice(0,i)+`<span class="ac-match">${name.slice(i,i+q.length)}</span>`+name.slice(i+q.length);
+  }
+  // For an alternative name, note which DB drug it maps to (shown as a hint).
+  function altHint(name){
+    const key=resolveDrugName(name);
+    return (key && key.toLowerCase()!==name.toLowerCase()) ? `→ ${key}` : "";
+  }
+  function render(){
+    const q=input.value.trim();
+    items=matches(q); active=-1;
+    if(!items.length){
+      drop.innerHTML=`<div class="ac-empty">No match — press Enter to add “${q}”</div>`;
+    }else{
+      drop.innerHTML=items.map((n,i)=>
+        `<div class="ac-item" data-i="${i}"><span>${hl(n,q)}</span><span class="ac-alt">${altHint(n)}</span></div>`
+      ).join("");
+      [...drop.querySelectorAll(".ac-item")].forEach(el=>{
+        el.addEventListener("mousedown",e=>{ e.preventDefault(); commit(items[+el.dataset.i]); });
+      });
+    }
+    position(); drop.style.display="block";
+  }
+  function setActive(i){
+    const els=[...drop.querySelectorAll(".ac-item")];
+    if(!els.length)return;
+    active=(i+els.length)%els.length;
+    els.forEach((el,j)=>el.classList.toggle("active",j===active));
+    els[active].scrollIntoView({block:"nearest"});
+  }
+  function close(){ drop.style.display="none"; active=-1; }
+  function commit(value){ input.value=value; close(); if(onPick) onPick(value); }
+
+  input.addEventListener("focus",render);
+  input.addEventListener("input",render);
+  input.addEventListener("keydown",e=>{
+    if(drop.style.display==="none")return;
+    if(e.key==="ArrowDown"){e.preventDefault();setActive(active+1);}
+    else if(e.key==="ArrowUp"){e.preventDefault();setActive(active-1);}
+    else if(e.key==="Enter"){
+      if(active>=0 && items[active]){
+        // Selecting a highlighted suggestion just fills the field (doesn't also
+        // fire the search / add action) so the user can finish the other field.
+        e.preventDefault(); e.stopPropagation(); commit(items[active]);
+      }
+      // else: let the input's own Enter handler run (search / add-to-saved),
+      // which will trigger the "not in our list" prompt if unknown.
+    }
+    else if(e.key==="Escape"){ close(); }
+  });
+  input.addEventListener("blur",()=>setTimeout(()=>{ if(!drop.matches(":hover")) close(); },120));
+  window.addEventListener("resize",()=>{ if(drop.style.display==="block") position(); });
+  return { close, refresh:render };
+}
+
+// "This drug isn't in our list. Add it?" confirmation popup. Returns a Promise<boolean>.
+function confirmAddDrug(name){
+  return new Promise(resolve=>{
+    const modal=document.getElementById("adddrug-modal");
+    document.getElementById("adddrug-msg").innerHTML=
+      `This drug <b>“${name}”</b> isn’t in our list.<br/>Add it to the list?`;
+    modal.style.display="flex";
+    const yes=document.getElementById("adddrug-yes"), no=document.getElementById("adddrug-no");
+    function cleanup(result){
+      modal.style.display="none";
+      yes.onclick=null; no.onclick=null;
+      resolve(result);
+    }
+    yes.onclick=()=>{
+      if(!userAddedDrugs.some(n=>n.toLowerCase()===name.toLowerCase())) userAddedDrugs.push(name);
+      cleanup(true);
+    };
+    no.onclick=()=>cleanup(false);
+  });
+}
+
+// ─── HISTORY (tracking only; suggestions now come from autocomplete) ───────────
 (function(){
-  const d1=document.getElementById("drug1"),d2=document.getElementById("drug2");
-  const drop=document.getElementById("history-dropdown");
-  let activeInput=null;
-  function showDrop(inp){activeInput=inp;renderHistChips();drop.style.display=history.length?"block":"none";}
-  function hideDrop(){setTimeout(()=>{if(!drop.contains(document.activeElement))drop.style.display="none";},150);}
-  d1.addEventListener("focus",()=>showDrop(d1)); d2.addEventListener("focus",()=>showDrop(d2));
-  d1.addEventListener("blur",hideDrop); d2.addEventListener("blur",hideDrop);
-  window._activeSearchInput=()=>activeInput;
+  // Expose a no-op active-input helper kept for backward compatibility.
+  window._activeSearchInput=()=>document.activeElement;
 })();
 
 function renderHistChips(){
@@ -449,13 +501,17 @@ function toggleSavedPanel(){const p=document.getElementById("saved-panel");p.sty
 function addToSaved(){
   const inp=document.getElementById("saved-input"),val=inp.value.trim();
   if(!val||savedList.includes(val))return;
+  // If the name isn't in our drug list, ask whether to add it to the list first.
+  if(!isKnownDrugName(val)){
+    confirmAddDrug(val).then(added=>{
+      if(!added)return;                 // "No" → don't save an unknown drug
+      savedList.push(val);renderSavedList();refreshGraph();inp.value="";
+    });
+    return;
+  }
   savedList.push(val);renderSavedList();refreshGraph();inp.value="";
-  pushSavedToCloud();   // BACKEND ADD-ON: sync when logged in
 }
-function removeFromSaved(name){
-  savedList=savedList.filter(s=>s!==name);renderSavedList();refreshGraph();
-  pushSavedToCloud();   // BACKEND ADD-ON: sync when logged in
-}
+function removeFromSaved(name){savedList=savedList.filter(s=>s!==name);renderSavedList();refreshGraph();}
 function renderSavedList(){
   const c=document.getElementById("saved-list-items");c.innerHTML="";
   savedList.forEach(name=>{
@@ -484,24 +540,23 @@ function pronounce(text){
   window.speechSynthesis.speak(u);
 }
 
-// ─── IDLE ROTATION ─────────────────────────────────────────────────────────────
+// ─── IDLE SPHERICAL ROTATION ───────────────────────────────────────────────────
+// In 3D the idle motion is an OrbitControls auto-rotate: the camera orbits the
+// node cloud on a sphere (replacing the old 2D in-plane spin). Active user input
+// pauses the auto-rotate for a few seconds (same 3s idle window as before).
 function startRotation(){
-  if(rotationTimer)return;
-  rotationTimer=setInterval(()=>{
-    if(isInteracting||!currentNodes.length)return;
-    const W=document.getElementById("graph-area").clientWidth;
-    const H=document.getElementById("graph-area").clientHeight;
-    const cx=W/2,cy=H/2;
-    currentNodes.forEach(n=>{
-      const dx=n.x-cx,dy=n.y-cy,r=Math.sqrt(dx*dx+dy*dy),a=Math.atan2(dy,dx)+0.003;
-      n.x=cx+r*Math.cos(a);n.y=cy+r*Math.sin(a);
-    });
-    if(simulation)simulation.alpha(0.05).restart();
-  },40);
+  const ctrls=Graph3D && Graph3D.controls && Graph3D.controls();
+  if(ctrls){ ctrls.autoRotate=true; ctrls.autoRotateSpeed=0.55; }
 }
 function resetIdle(){
   isInteracting=true;clearTimeout(idleTimeout);
-  idleTimeout=setTimeout(()=>{isInteracting=false;},3000);
+  const ctrls=Graph3D && Graph3D.controls && Graph3D.controls();
+  if(ctrls) ctrls.autoRotate=false;                 // pause orbit while interacting
+  idleTimeout=setTimeout(()=>{
+    isInteracting=false;
+    const c=Graph3D && Graph3D.controls && Graph3D.controls();
+    if(c) c.autoRotate=true;                         // resume spherical idle orbit
+  },3000);
 }
 document.addEventListener("mousemove",resetIdle);
 document.addEventListener("mousedown",resetIdle);
@@ -526,86 +581,107 @@ function buildGraph(rootName,silent=false){
 
   const links=relEdges.map(e=>({source:e.source,target:e.target,severity:e.severity,type:e.type,desc:e.desc,citation:e.citation}));
 
-  renderD3(nodes,links,rootName);
+  // Decide which renderer to use. 3D needs the ES-module libraries to be ready;
+  // if they aren't (still loading, or failed), fall back to the 2D renderer so
+  // the app is never stuck on an empty/broken view.
+  const want3D = viewMode==="3d";
+  const can3D  = typeof ForceGraph3D!=="undefined" && typeof window.THREE!=="undefined" && !window.__force3DUnavailable;
+  if(want3D && can3D){
+    try{ render3D(nodes,links,rootName); }
+    catch(err){ console.error("3D render failed; falling back to 2D.",err); forceFallbackTo2D(); render2D(nodes,links,rootName); }
+  }else{
+    // Show the 2D host while in (or falling back to) 2D.
+    document.getElementById("graph2d").style.display="block";
+    document.getElementById("graph3d").style.display="none";
+    render2D(nodes,links,rootName);
+  }
 }
 
-// ─── D3 RENDER with camera-pan + fade + spring ────────────────────────────────
-function renderD3(nodes,links,rootName){
-  const svgEl=document.getElementById("svg");
+// Permanently drop to 2D (used when 3D is unavailable or errors). Updates the
+// toggle UI and disables the 3D button so the user isn't sent back to a broken view.
+function forceFallbackTo2D(){
+  viewMode="2d";
+  window.__force3DUnavailable=true;
+  const b2=document.getElementById("vt-2d"), b3=document.getElementById("vt-3d");
+  if(b2) b2.classList.add("active");
+  if(b3){ b3.classList.remove("active"); b3.disabled=true; b3.title="3D unavailable (libraries didn’t load)"; b3.style.opacity="0.5"; b3.style.cursor="not-allowed"; }
+  document.getElementById("graph2d").style.display="block";
+  document.getElementById("graph3d").style.display="none";
+}
+
+// ─── VIEW MODE TOGGLE (2D ↔ 3D) ────────────────────────────────────────────────
+function setViewMode(mode){
+  if(mode===viewMode){ return; }
+  // Guard: don't switch into 3D if the 3D libraries aren't available.
+  if(mode==="3d" && (typeof ForceGraph3D==="undefined" || typeof window.THREE==="undefined" || window.__force3DUnavailable)){
+    if(!window.__graphLibsReady){ /* still loading — allow, buildGraph will wait */ }
+    else { console.warn("3D libraries unavailable — staying in 2D."); return; }
+  }
+  viewMode=mode;
+  document.getElementById("vt-2d").classList.toggle("active", mode==="2d");
+  document.getElementById("vt-3d").classList.toggle("active", mode==="3d");
+  document.getElementById("graph2d").style.display = mode==="2d" ? "block" : "none";
+  document.getElementById("graph3d").style.display = mode==="3d" ? "block" : "none";
+  if(mode==="3d" && Graph3D && Graph3D.resumeAnimation) Graph3D.resumeAnimation();
+  if(mode==="2d" && Graph3D && Graph3D.pauseAnimation)  Graph3D.pauseAnimation();
+  buildGraph(currentRoot, true);
+}
+
+// ─── 2D FORCE-GRAPH (D3 / SVG) — the original renderer, used in "2D" mode ───────
+let simulation2D = null;
+let rotationTimer = null;   // 2D idle in-plane spin
+function render2D(nodes,links,rootName){
+  const svgEl=document.getElementById("graph2d");
   const W=svgEl.clientWidth||document.getElementById("graph-area").clientWidth;
   const H=svgEl.clientHeight||document.getElementById("graph-area").clientHeight;
   const cx=W/2,cy=H/2;
 
-  // ── 1. Assign start positions from cache (nodes carry over), new nodes start at center ──
+  // Start positions from cache (carry nodes over), new nodes near center.
   nodes.forEach(n=>{
-    if(posCache[n.id]){n.x=posCache[n.id].x;n.y=posCache[n.id].y;}
+    if(posCache[n.id]&&posCache[n.id].x!=null){n.x=posCache[n.id].x;n.y=posCache[n.id].y;}
     else{n.x=cx+(Math.random()-.5)*30;n.y=cy+(Math.random()-.5)*30;}
     if(n.isRoot){n.fx=cx;n.fy=cy;}
   });
 
-  const svg=d3.select("#svg");
-
-  // ── 2. If a <g> layer already exists, we do a cross-fade transition ──
-  // Guard against rapid clicks: keep only the most recent old scene (the one we
-  // fade out below); remove any older leftovers so dead layers can't pile up.
+  const svg=d3.select("#graph2d");
+  // Cross-fade: keep only the latest old scene, fade it out, fade new in.
   const scenes=svg.selectAll("g.scene").nodes();
   scenes.slice(0,-1).forEach(el=>el.remove());
-
   const oldG=scenes.length?d3.select(scenes[scenes.length-1]):d3.select(null);
   const isTransition=!oldG.empty();
-
-  // New scene group (invisible at first if transitioning)
-  const g=svg.append("g").attr("class","scene").attr("opacity", isTransition?0:1);
-
-  // Zoom on the new layer
+  const g=svg.append("g").attr("class","scene").attr("opacity",isTransition?0:1);
   svg.call(d3.zoom().scaleExtent([0.25,3]).on("zoom",e=>g.attr("transform",e.transform)));
 
-  if(simulation)simulation.stop();
-  simulation=d3.forceSimulation(nodes)
+  if(simulation2D)simulation2D.stop();
+  simulation2D=d3.forceSimulation(nodes)
     .force("link",d3.forceLink(links).id(d=>d.id).distance(175).strength(0.55))
     .force("charge",d3.forceManyBody().strength(-480))
     .force("center",d3.forceCenter(cx,cy))
     .force("collision",d3.forceCollide(52))
-    .velocityDecay(0.55)   // smoother, slower settle
-    .alphaDecay(0.03);     // longer spring animation
+    .velocityDecay(0.55).alphaDecay(0.03);
 
-  const edgeColor=s=>s==="severe"?"#c0392b":s==="moderate"?"#d48600":"#27ae60";
-  // Severity is encoded by COLOR ONLY — all lines share the same width so the
-  // only visual difference between severities is the stroke color (see legend).
   const EDGE_WIDTH=2.5;
-  const dashArray =t=>t==="Hematologic"?"none":t==="Metabolic"?"10,4":t==="Cardiovascular"?"5,3":"2,5";
+  const dashArray=t=>t==="Hematologic"?"none":t==="Metabolic"?"10,4":t==="Cardiovascular"?"5,3":"2,5";
 
-  // Each edge is a <g> with two lines: a wide, invisible "hit area" line that
-  // makes the thin edge easy to click, and the visible colored line on top.
   const linkG=g.append("g").selectAll("g.edge").data(links).join("g").attr("class","edge")
-    .attr("cursor","pointer")
-    .attr("opacity",0)   // start invisible, fade in
+    .attr("cursor","pointer").attr("opacity",0)
     .on("click",(event,d)=>{event.stopPropagation();resetIdle();showInteractionCard(d);})
     .on("mouseover",(event,d)=>showTooltip(event,
       `<b>${d.source.id||d.source} ↔ ${d.target.id||d.target}</b><br/>
        <span style="color:#b8d4a8">${d.severity.toUpperCase()} · ${d.type}</span><br/>${d.desc}
        <br/><span style="color:#8fbe7c;font-size:.72rem">Click line for full details</span>`))
     .on("mouseout",hideTooltip);
-
-  // Invisible wide hit area for easy clicking.
-  const hitSel=linkG.append("line")
-    .attr("stroke","transparent")
-    .attr("stroke-width",14);
-
-  // Visible colored line (color = severity, dash = interaction type).
+  linkG.append("line").attr("stroke","transparent").attr("stroke-width",14);
   const linkSel=linkG.append("line")
-    .attr("stroke",d=>edgeColor(d.severity))
-    .attr("stroke-width",EDGE_WIDTH)
-    .attr("stroke-dasharray",d=>dashArray(d.type))
-    .attr("pointer-events","none");
+    .attr("stroke",d=>edgeColor(d.severity)).attr("stroke-width",EDGE_WIDTH)
+    .attr("stroke-dasharray",d=>dashArray(d.type)).attr("pointer-events","none");
 
   const nodeG=g.append("g").selectAll("g").data(nodes).join("g")
-    .attr("cursor","pointer")
-    .attr("opacity",0)   // start invisible, fade in
+    .attr("cursor","pointer").attr("opacity",0)
     .call(d3.drag()
-      .on("start",(event,d)=>{resetIdle();if(!event.active)simulation.alphaTarget(.4).restart();d.fx=d.x;d.fy=d.y;})
+      .on("start",(event,d)=>{resetIdle();if(!event.active)simulation2D.alphaTarget(.4).restart();d.fx=d.x;d.fy=d.y;})
       .on("drag",(event,d)=>{d.fx=event.x;d.fy=event.y;})
-      .on("end",(event,d)=>{if(!event.active)simulation.alphaTarget(0);if(!d.isRoot){d.fx=null;d.fy=null;}}))
+      .on("end",(event,d)=>{if(!event.active)simulation2D.alphaTarget(0);if(!d.isRoot){d.fx=null;d.fy=null;}}))
     .on("click",(event,d)=>{event.stopPropagation();resetIdle();if(d.isRoot)showInfoCard(d);else buildGraph(d.id);})
     .on("mouseover",(event,d)=>showTooltip(event,
       `<b>${d.id}</b><br/><span style="color:#b8d4a8">${d.ingredient}</span><br/>
@@ -614,10 +690,9 @@ function renderD3(nodes,links,rootName){
 
   nodeG.append("circle")
     .attr("r",d=>d.isRoot?30:21)
-    .attr("fill",d=>d.isRoot?"#4a6741":"#ddd5c2")
-    .attr("stroke",d=>conflictsWithSaved(d.id)?"#a855f7":d.isRoot?"#8fbe7c":"#a09080")
-    .attr("stroke-width",d=>conflictsWithSaved(d.id)?3:d.isRoot?3:1.5)
-    .attr("stroke-dasharray","none");   // solid ring for all (purple or default)
+    .attr("fill",d=>nodeColor(d))
+    .attr("stroke",d=>nodeRingColor(d))
+    .attr("stroke-width",d=>conflictsWithSaved(d.id)?3:d.isRoot?3:1.5);
 
   nodeG.append("text")
     .attr("text-anchor","middle").attr("dy","0.35em")
@@ -627,8 +702,7 @@ function renderD3(nodes,links,rootName){
     .attr("pointer-events","none")
     .text(d=>d.id.length>10?d.id.slice(0,9)+"…":d.id);
 
-  simulation.on("tick",()=>{
-    // Update position cache while simulation runs
+  simulation2D.on("tick",()=>{
     nodes.forEach(n=>{posCache[n.id]={x:n.x,y:n.y};});
     linkG.selectAll("line")
       .attr("x1",d=>d.source.x).attr("y1",d=>d.source.y)
@@ -636,31 +710,278 @@ function renderD3(nodes,links,rootName){
     nodeG.attr("transform",d=>`translate(${d.x},${d.y})`);
   });
 
-  // ── 3. Cross-fade: fade out old layer, fade in new layer ──
-  const FADE_MS = 400;
+  const FADE_MS=400;
   if(isTransition){
-    // Fade out old
-    oldG.transition().duration(FADE_MS).attr("opacity",0)
-      .on("end",function(){d3.select(this).remove();});
-    // Fade in new
+    oldG.transition().duration(FADE_MS).attr("opacity",0).on("end",function(){d3.select(this).remove();});
     g.transition().duration(FADE_MS).delay(FADE_MS*0.5).attr("opacity",1);
-    // Nodes/edges fade in slightly later for a spring-reveal feel
     linkG.transition().duration(500).delay(FADE_MS*0.6).attr("opacity",.82);
     nodeG.transition().duration(500).delay(FADE_MS*0.7).attr("opacity",1);
-  } else {
-    // First load — just appear
+  }else{
     g.attr("opacity",1);
     linkG.transition().duration(400).attr("opacity",.82);
     nodeG.transition().duration(400).attr("opacity",1);
   }
-
-  // ── 4. Keep the root pinned at the center of the view. The forceCenter plus the
-  //       fixed root (fx/fy=cx,cy) already center the scene, so no manual camera
-  //       pan is needed. (The old camera-pan used the root's un-settled position
-  //       and could fling the whole graph off-screen on every click.)
-
-  // Unfix root after spring animation settles so it can drift naturally.
   setTimeout(()=>{const r=nodes.find(n=>n.isRoot);if(r){r.fx=null;r.fy=null;}},1200);
+  start2DRotation();
+}
+
+// 2D idle rotation (in-plane spin), mirroring the original behavior.
+function start2DRotation(){
+  if(rotationTimer)return;
+  rotationTimer=setInterval(()=>{
+    if(viewMode!=="2d"||isInteracting||!currentNodes.length)return;
+    const W=document.getElementById("graph-area").clientWidth;
+    const H=document.getElementById("graph-area").clientHeight;
+    const cx=W/2,cy=H/2;
+    currentNodes.forEach(n=>{
+      if(n.x==null)return;
+      const dx=n.x-cx,dy=n.y-cy,r=Math.sqrt(dx*dx+dy*dy),a=Math.atan2(dy,dx)+0.003;
+      n.x=cx+r*Math.cos(a);n.y=cy+r*Math.sin(a);
+    });
+    if(simulation2D)simulation2D.alpha(0.05).restart();
+  },40);
+}
+
+// ─── 3D FORCE-GRAPH (ThreeJS/WebGL + d3-force-3d) ──────────────────────────────
+// Modeled after vasturiano's react-force-graph / 3d-force-graph: nodes lay out
+// and move in a 3D spherical space via the d3-force-3d engine, rendered with
+// ThreeJS. All prior behavior is preserved — click a node to explore / open its
+// info card, click a link for the interaction card, hover tooltips, the purple
+// "conflicts with saved" ring, severity-colored links, and the root pinned at the
+// scene center on each rebuild, then released to drift.
+let Graph3D = null;
+
+// Visual encodings carried over verbatim from the 2D version.
+const edgeColor = s => s==="severe" ? "#c0392b" : s==="moderate" ? "#d48600" : "#27ae60";
+// Interaction type was shown via dash pattern in 2D; in 3D (solid tubes) we keep
+// severity = COLOR, and encode type as a subtle link-width tier so the mapping
+// survives. Colors/severity meaning are unchanged.
+const typeWidth = t => t==="Hematologic" ? 1.1 : t==="Metabolic" ? 0.9 : t==="Cardiovascular" ? 0.7 : 0.5;
+
+function nodeColor(d){ return d.isRoot ? "#4a6741" : "#ddd5c2"; }
+function nodeRingColor(d){ return conflictsWithSaved(d.id) ? "#a855f7" : d.isRoot ? "#8fbe7c" : "#a09080"; }
+function nodeRadius(d){ return d.isRoot ? 10 : 6; }   // 3D sphere radius
+
+// Track wireframe bubbles (to spin them) and labels (to keep them readable at
+// any camera distance) each frame.
+let _spinBubbles = [];
+let _labels = [];
+
+// Always-visible node label, bigger than the 2D text for readability. We keep
+// three-spritetext's default sizeAttenuation=ON (disabling it makes the sprite
+// render enormous/broken), and just use a larger textHeight. depthWrite off so
+// labels aren't hidden inside their own node sphere.
+function makeLabel(text, opts){
+  if(typeof window.SpriteText==="undefined") return null;
+  const s=new window.SpriteText(text);
+  s.color = opts.color;
+  s.textHeight = opts.textHeight;            // larger than the old 2D text
+  s.fontWeight = opts.weight || "400";
+  s.fontFace = "Segoe UI, sans-serif";
+  s.backgroundColor = "rgba(245,240,232,0.72)";  // soft plate for legibility on any bg
+  s.padding = 0.6;
+  s.borderRadius = 2;
+  if(s.material){ s.material.depthWrite=false; }
+  return s;
+}
+
+// Wireframe "globe" bubble for the CENTRAL node — meridian rings + latitude rings
+// + two polar axes, modeled on the provided CSS sphere. Slowly self-rotates.
+function makeWireframeSphere(R, color, accent){
+  const THREE=window.THREE;
+  const group=new THREE.Group();
+  const lineMat =new THREE.LineBasicMaterial({color:color,  transparent:true, opacity:0.55});
+  const latMat  =new THREE.LineBasicMaterial({color:accent, transparent:true, opacity:0.4});
+
+  // Helper: a circle (LineLoop) of radius r in the XY plane.
+  function circle(r, segments, mat){
+    const pts=[];
+    for(let i=0;i<=segments;i++){ const a=(i/segments)*Math.PI*2; pts.push(new THREE.Vector3(Math.cos(a)*r, Math.sin(a)*r, 0)); }
+    return new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts), mat);
+  }
+
+  // Meridians: full great circles rotated around the Y axis (18 of them, 10° apart).
+  for(let i=0;i<18;i++){
+    const m=circle(R, 64, lineMat);
+    m.rotation.y=(i/18)*Math.PI;    // spread 0..180° (the back halves overlap)
+    group.add(m);
+  }
+  // Latitudes: parallels at varying heights (smaller circles stacked along Y).
+  const bands=6;
+  for(let i=1;i<bands;i++){
+    const phi=(i/bands)*Math.PI - Math.PI/2;   // -90°..+90°
+    const r=Math.cos(phi)*R, y=Math.sin(phi)*R;
+    const lat=circle(r, 48, latMat);
+    lat.rotation.x=Math.PI/2;      // lay flat (parallel to the equator plane)
+    lat.position.y=y;
+    group.add(lat);
+  }
+  // Polar axis (a line through both poles) + a faint translucent core sphere.
+  const axisPts=[new THREE.Vector3(0,-R*1.18,0), new THREE.Vector3(0,R*1.18,0)];
+  group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(axisPts),
+            new THREE.LineBasicMaterial({color:accent, transparent:true, opacity:0.5})));
+  const core=new THREE.Mesh(new THREE.SphereGeometry(R*0.96, 24, 18),
+            new THREE.MeshLambertMaterial({color:color, transparent:true, opacity:0.22}));
+  group.add(core);
+  return group;
+}
+
+// Build a ThreeJS object for a node. The central (root) node is rendered as the
+// rotating wireframe globe; other nodes are shaded spheres with an outline ring.
+// Every node gets an always-visible, distance-independent text label.
+function makeNodeObject(d){
+  if(typeof window.THREE==="undefined") return null;   // fall back to lib default
+  const THREE=window.THREE;
+  const group=new THREE.Group();
+  const r=nodeRadius(d);
+
+  if(d.isRoot){
+    // Central bubble: wireframe globe (meridians/latitudes/axes), self-spinning.
+    const R=r*1.7;
+    const bubble=makeWireframeSphere(R, nodeColor(d), nodeRingColor(d));
+    bubble.userData.spin=true;
+    group.add(bubble);
+    _spinBubbles.push(bubble);
+    // Label sits above the globe.
+    const label=makeLabel(d.id.length>12?d.id.slice(0,11)+"…":d.id,
+      {color:"#1d281e", textHeight:12, weight:"700"});
+    if(label){ label.position.set(0, R+7, 0); group.add(label); _labels.push(label); }
+  }else{
+    // Regular node: shaded sphere + outline ring (keeps the saved-conflict colors).
+    const sphere=new THREE.Mesh(new THREE.SphereGeometry(r,24,18),
+      new THREE.MeshLambertMaterial({color:nodeColor(d)}));
+    group.add(sphere);
+    const ring=new THREE.Mesh(new THREE.SphereGeometry(r*1.14,24,18),
+      new THREE.MeshBasicMaterial({color:nodeRingColor(d), transparent:true, opacity:0.3, side:THREE.BackSide}));
+    group.add(ring);
+    const label=makeLabel(d.id.length>12?d.id.slice(0,11)+"…":d.id,
+      {color:"#1d281e", textHeight:10, weight:"600"});
+    if(label){ label.position.set(0, r+6, 0); group.add(label); _labels.push(label); }
+  }
+  return group;
+}
+
+// Per-frame loop (3D only): spins the central wireframe globe(s), and rescales
+// every label so it keeps a ~constant on-screen size no matter the zoom/distance
+// (the robust, non-breaking way to make 3D text readable at any distance).
+let _bubbleRAF=null;
+const _LABEL_REF_DIST=220;   // camera distance at which labels show at base size
+function startBubbleSpin(){
+  if(_bubbleRAF) return;
+  const tick=()=>{
+    if(viewMode==="3d"){
+      for(const b of _spinBubbles){ b.rotation.y+=0.012; b.rotation.x=0.45; }
+      try{
+        const cam = Graph3D && Graph3D.camera && Graph3D.camera();
+        if(cam && _labels.length){
+          for(const L of _labels){
+            if(L.scale.__base===undefined){ L.scale.__base={x:L.scale.x,y:L.scale.y}; }
+            // world position of the label
+            const wp = L.getWorldPosition ? L.getWorldPosition(new window.THREE.Vector3()) : null;
+            if(!wp) continue;
+            const dist = cam.position.distanceTo(wp);
+            const k = Math.max(0.6, Math.min(3.2, dist/_LABEL_REF_DIST));   // clamp
+            L.scale.x = L.scale.__base.x * k;
+            L.scale.y = L.scale.__base.y * k;
+          }
+        }
+      }catch(e){/* never let label sizing break the render loop */}
+    }
+    _bubbleRAF=requestAnimationFrame(tick);
+  };
+  _bubbleRAF=requestAnimationFrame(tick);
+}
+
+function render3D(nodes,links,rootName){
+  const host=document.getElementById("graph3d");
+
+  // Lazily create the single persistent ForceGraph3D instance.
+  if(!Graph3D){
+    if(typeof ForceGraph3D==="undefined"){ console.warn("3d-force-graph not loaded"); return; }
+    // Use OrbitControls so the idle auto-rotate (spherical camera orbit) works;
+    // the library's default is TrackballControls, which has no autoRotate.
+    Graph3D = ForceGraph3D({ controlType:"orbit" })(host)
+      .backgroundColor("#f5f0e8")                     // match app theme (light)
+      .showNavInfo(false)
+      .nodeRelSize(6)
+      .nodeVal(d=>d.isRoot?3:1)
+      .nodeColor(nodeColor)                           // used if custom object unavailable
+      .nodeThreeObject(makeNodeObject)
+      .nodeThreeObjectExtend(false)
+      .nodeLabel(d=>`${d.id} — ${d.ingredient}`)      // native hover label (backup)
+      .linkColor(d=>edgeColor(d.severity))            // severity = COLOR (unchanged)
+      .linkWidth(d=>typeWidth(d.type))
+      .linkOpacity(0.82)
+      .linkHoverPrecision(6)
+      .onNodeClick(d=>{ resetIdle(); if(d.isRoot) showInfoCard(d); else buildGraph(d.id); })
+      .onLinkClick(d=>{ resetIdle(); showInteractionCard(d); })
+      .onNodeDragEnd(d=>{ d.fx=d.x; d.fy=d.y; d.fz=d.z; })   // pin where dropped (like 2D drag)
+      .onBackgroundClick(()=>resetIdle());
+
+    // Hover tooltips — reuse the existing rich HTML tooltip.
+    Graph3D.onNodeHover((d,prev)=>{
+      host.style.cursor=d?"pointer":null;
+      if(!d){hideTooltip();return;}
+      showTooltipAt(`<b>${d.id}</b><br/><span style="color:#b8d4a8">${d.ingredient}</span><br/>
+        <span style="color:#8fbe7c;font-size:.72rem">Click to ${d.isRoot?'see info card':'explore'}</span>`);
+    });
+    Graph3D.onLinkHover(d=>{
+      host.style.cursor=d?"pointer":null;
+      if(!d){hideTooltip();return;}
+      const a=d.source.id||d.source, b=d.target.id||d.target;
+      showTooltipAt(`<b>${a} ↔ ${b}</b><br/>
+        <span style="color:#b8d4a8">${d.severity.toUpperCase()} · ${d.type}</span><br/>${d.desc}
+        <br/><span style="color:#8fbe7c;font-size:.72rem">Click line for full details</span>`);
+    });
+
+    // ── Physics ported from the 2D version onto the d3-force-3d engine ──────────
+    //    (same charge / link distance+strength / collide, and decay constants,
+    //     now solving in 3 dimensions so the layout is a spherical cloud).
+    Graph3D.numDimensions(3)
+      .d3VelocityDecay(0.55)                          // was velocityDecay(0.55)
+      .d3AlphaDecay(0.03)                             // was alphaDecay(0.03)
+      .cooldownTime(Infinity)                         // keep gentle motion alive for idle orbit
+      .warmupTicks(0);
+    Graph3D.d3Force("charge").strength(-480);
+    Graph3D.d3Force("link").distance(175).strength(0.55);
+    // (The strong charge force keeps the 3D spheres well separated; we avoid
+    //  injecting a 2D d3.forceCollide here since the engine is d3-force-3d.)
+
+    // Track hover position for the HTML tooltip.
+    host.addEventListener("mousemove",e=>{ _mx=e.clientX; _my=e.clientY; if(tt.style.display==="block"){tt.style.left=(_mx+14)+"px";tt.style.top=(_my-10)+"px";} });
+  }
+
+  // ── Position cache (3D space): carry nodes over so rebuilds animate from
+  //    their last 3D position. Kept separate from the 2D cache so toggling
+  //    modes never mixes screen coords with 3D-space coords. ──
+  nodes.forEach(n=>{
+    if(posCache3D[n.id]){ n.x=posCache3D[n.id].x; n.y=posCache3D[n.id].y; n.z=posCache3D[n.id].z; }
+    if(n.isRoot){ n.fx=0; n.fy=0; n.fz=0; }           // pin root at scene center
+  });
+
+  // New scene → drop references to the previous scene's bubbles & labels.
+  _spinBubbles=[];
+  _labels=[];
+
+  // Fade the canvas during a data swap (preserves the old cross-fade feel).
+  host.style.opacity="0.15";
+  Graph3D.graphData({nodes, links});
+  setTimeout(()=>{ host.style.opacity="1"; }, 120);
+  startBubbleSpin();
+
+  // Cache 3D positions as the engine ticks.
+  Graph3D.onEngineTick(()=>{
+    (Graph3D.graphData().nodes||[]).forEach(n=>{ posCache3D[n.id]={x:n.x,y:n.y,z:n.z}; });
+  });
+
+  // Release the root after the spring settles so the cloud can drift (as before).
+  setTimeout(()=>{
+    const r=(Graph3D.graphData().nodes||[]).find(n=>n.isRoot);
+    if(r){ r.fx=null; r.fy=null; r.fz=null; }
+  },1200);
+
+  // Frame the scene, then resume the spherical idle orbit.
+  Graph3D.zoomToFit(600, 60);
   startRotation();
 }
 
@@ -821,10 +1142,11 @@ function drugCardHTML(drug){
       <div class="card-section-title">Same Medication — Other Brand Names</div>
       <div style="margin-top:4px">${similarHTML||'<span style="color:#8a7e6a;font-size:.8rem">None listed</span>'}</div>
 
-      <div class="card-section-title" style="margin-top:14px">
+      <div class="card-section-title">
         Negative Interactions
         <span style="background:#c0392b22;color:#c0392b;border:1px solid #c0392b55;border-radius:8px;padding:1px 7px;font-size:.68rem;margin-left:6px">${rels.length}</span>
       </div>
+      <div class="icard-list${rels.length>3?' scroll':''}">
       ${rels.map(r=>{
         const other=r.source===drug.id?r.target:r.source;
         return `<div class="icard ${r.severity}">
@@ -838,6 +1160,7 @@ function drugCardHTML(drug){
           </div>
         </div>`;
       }).join("")}
+      </div>
     </div>`;
 }
 
@@ -896,7 +1219,11 @@ function showInteractionCard(link){
 
 // ─── TOOLTIP ──────────────────────────────────────────────────────────────────
 const tt=document.getElementById("tooltip");
+let _mx=0,_my=0;   // last pointer position (for the 3D hover tooltip)
+document.addEventListener("mousemove",e=>{_mx=e.clientX;_my=e.clientY;});
 function showTooltip(event,html){tt.innerHTML=html;tt.style.display="block";tt.style.left=(event.pageX+14)+"px";tt.style.top=(event.pageY-10)+"px";}
+// Position-agnostic variant used by the WebGL hover handlers (no DOM event).
+function showTooltipAt(html){tt.innerHTML=html;tt.style.display="block";tt.style.left=(_mx+14)+"px";tt.style.top=(_my-10)+"px";}
 function hideTooltip(){tt.style.display="none";}
 
 // ─── SEARCH ───────────────────────────────────────────────────────────────────
@@ -907,6 +1234,15 @@ function searchInteraction(){
   const srTitle=document.getElementById("sr-title"),srBody=document.getElementById("sr-body");
 
   if(!d1||!d2){srTitle.textContent="Enter both drug names";srBody.textContent="";sr.style.display="block";return;}
+
+  // Any entered name that is neither in our list nor resolvable to a DB drug is
+  // "unknown". Prompt to add each unknown name to the list, then re-run search.
+  const unknown=[d1,d2].filter(n=>!isKnownDrugName(n)&&!resolveDrugName(n));
+  if(unknown.length){
+    // Prompt sequentially for each unknown name, then retry the search once done.
+    (async()=>{ for(const n of unknown){ await confirmAddDrug(n); } searchInteraction(); })();
+    return;
+  }
 
   // Resolve alternative brand names / ingredients to canonical drug keys so that
   // e.g. "Coumadin" (a brand of Warfarin) or "Motrin" (Advil) pull up the graph.
@@ -953,7 +1289,7 @@ function searchInteraction(){
     srTitle.textContent="No interaction found";
     const shown1=key1?`<b>${key1}</b>${isAlt1?` (“${d1}”)`:""}`:`<b>${d1}</b>`;
     const shown2=key2?`<b>${key2}</b>${isAlt2?` (“${d2}”)`:""}`:`<b>${d2}</b>`;
-    srBody.innerHTML=`No recorded interaction between ${shown1} and ${shown2} in ODMAP.`;
+    srBody.innerHTML=`No recorded interaction between ${shown1} and ${shown2} in RxMap.`;
     if(!anyAlt){ if(key1)buildGraph(key1); else if(key2)buildGraph(key2); }
   }
   sr.style.display="block";
@@ -961,9 +1297,42 @@ function searchInteraction(){
 
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&(document.activeElement.id==="drug1"||document.activeElement.id==="drug2"))searchInteraction();});
 
+// ─── AUTOCOMPLETE WIRING ───────────────────────────────────────────────────────
+// Attach the alphabetical, narrowing dropdown to both search inputs and the
+// saved-list input. Picking a suggestion just fills the field; the user can
+// still type a full name and press Go / Add / Enter.
+attachAutocomplete(document.getElementById("drug1"), ()=>{});
+attachAutocomplete(document.getElementById("drug2"), ()=>{});
+attachAutocomplete(document.getElementById("saved-input"), ()=>{});
+
 // ─── INIT ─────────────────────────────────────────────────────────────────────
-window.onload  = ()=>{ buildGraph("Warfarin"); initAuth(); };   // BACKEND ADD-ON: initAuth
-window.onresize= ()=>buildGraph(currentRoot,true);
+// Coordinate the first render with the async ES-module loading of the 3D libs.
+//  • Default mode is 3D. If the libs are ready, we render 3D immediately.
+//  • If they're still loading, buildGraph() renders a 2D interim view, then we
+//    upgrade to 3D the moment the libs finish loading.
+//  • If they fail to load, we lock to 2D (toggle's 3D button is disabled).
+function finalizeGraphLibs(){
+  if(window.__force3DUnavailable){
+    forceFallbackTo2D();
+    buildGraph(currentRoot,true);
+  }else if(viewMode==="3d" && typeof ForceGraph3D!=="undefined"){
+    // (Re)build in real 3D now that the libraries are available.
+    document.getElementById("graph3d").style.display="block";
+    document.getElementById("graph2d").style.display="none";
+    buildGraph(currentRoot,true);
+  }
+}
+document.addEventListener("graphlibsready", finalizeGraphLibs);
+
+window.onload = ()=>{
+  buildGraph("Warfarin");                 // renders now (2D interim if libs pending)
+  if(window.__graphLibsReady) finalizeGraphLibs();   // libs already settled? upgrade now
+  // Safety net: if the libs never signal readiness within 8s, ensure 2D is shown.
+  setTimeout(()=>{ if(!window.__graphLibsReady){ forceFallbackTo2D(); buildGraph(currentRoot,true); } }, 8000);
+};
+// The 3D graph auto-resizes to its container; the 2D graph fills its SVG host.
+// Keep the 3D camera framed on resize (no physics restart needed).
+window.onresize= ()=>{ if(viewMode==="3d" && Graph3D && Graph3D.zoomToFit) Graph3D.zoomToFit(400,60); };
 </script>
 </body>
 </html>
