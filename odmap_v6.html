@@ -4,6 +4,7 @@
 <meta charset="UTF-8"/>
 <title>ODMAP — Drug Interaction Network</title>
 <script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:#f5f0e8;color:#2d3a2e;font-family:'Segoe UI',sans-serif;display:flex;flex-direction:column;height:100vh;overflow:hidden}
@@ -23,6 +24,33 @@
 
   #saved-btn{background:#4a6741;border:1px solid #8fbe7c;color:#e8f0e4;padding:5px 11px;border-radius:6px;cursor:pointer;font-size:.78rem;font-weight:600;white-space:nowrap;flex-shrink:0}
   #saved-btn:hover{background:#5a7d50}
+  #account-btn{background:#3d4f3e;border:1px solid #8fbe7c;color:#b8d4a8;padding:5px 11px;border-radius:6px;cursor:pointer;font-size:.78rem;font-weight:600;white-space:nowrap;flex-shrink:0}
+  #account-btn:hover{background:#4a6741}
+
+  /* ── SAVED SYNC STATUS ── */
+  #saved-sync-status{font-size:.72rem;color:#7a6e5a;margin-bottom:8px;min-height:1em}
+  #saved-sync-status.synced{color:#3a5e34}
+  #saved-sync-status.error{color:#c0392b}
+
+  /* ── AUTH MODAL ── */
+  #auth-overlay{position:fixed;inset:0;background:#0007;backdrop-filter:blur(2px);z-index:2000;display:none;align-items:center;justify-content:center}
+  #auth-overlay.open{display:flex}
+  #auth-modal{position:relative;background:#f0ebe0;border:1px solid #c5b99a;border-radius:12px;padding:26px 28px;width:340px;max-width:92vw;box-shadow:0 10px 40px #0004;color:#2d3a2e}
+  .auth-close{position:absolute;top:12px;right:14px;cursor:pointer;color:#8a7e6a;font-size:1.1rem}
+  .auth-close:hover{color:#2d3a2e}
+  #auth-title{font-size:1.15rem;color:#2d3a2e;margin-bottom:4px}
+  .auth-sub{font-size:.8rem;color:#7a6e5a;margin-bottom:16px}
+  #auth-form{display:flex;flex-direction:column;gap:10px}
+  #auth-form input{background:#fff;border:1px solid #c5b99a;border-radius:6px;padding:9px 11px;font-size:.88rem;color:#2d3a2e}
+  #auth-form input:focus{outline:none;border-color:#4a6741}
+  #auth-submit{background:#4a6741;border:none;color:#e8f0e4;padding:10px;border-radius:6px;cursor:pointer;font-size:.9rem;font-weight:600;margin-top:4px}
+  #auth-submit:hover{background:#5a7d50}
+  #auth-submit:disabled{opacity:.6;cursor:default}
+  #auth-msg{font-size:.78rem;min-height:1em;line-height:1.4}
+  #auth-msg.error{color:#c0392b}
+  #auth-msg.success{color:#3a5e34}
+  .auth-switch{margin-top:16px;font-size:.8rem;color:#7a6e5a;text-align:center}
+  .auth-switch a{color:#4a6741;cursor:pointer;font-weight:600;text-decoration:underline;margin-left:4px}
 
   #search-area{display:flex;gap:8px;align-items:center;position:relative;flex-shrink:0}
   #search-area input{background:#3d4f3e;border:1px solid #4a6741;border-radius:6px;color:#e8f0e4;padding:5px 10px;font-size:.82rem;width:130px}
@@ -96,6 +124,7 @@
   <div class="subtitle">Drug Interaction Network</div>
   <div id="breadcrumb-wrap"><div id="breadcrumb-inner"></div></div>
   <button id="saved-btn" onclick="toggleSavedPanel()">💊 Saved List</button>
+  <button id="account-btn" onclick="onAccountClick()">👤 Log in</button>
   <div id="search-area">
     <input id="drug1" placeholder="Drug 1" autocomplete="off"/>
     <input id="drug2" placeholder="Drug 2" autocomplete="off"/>
@@ -110,11 +139,31 @@
 <div id="saved-panel">
   <span class="sp-close" onclick="toggleSavedPanel()">✕</span>
   <h3>💊 My Saved Prescriptions</h3>
+  <div id="saved-sync-status"></div>
   <div id="saved-input-row">
     <input id="saved-input" placeholder="Add drug name…" autocomplete="off"/>
     <button id="saved-add-btn" onclick="addToSaved()">Add</button>
   </div>
   <div id="saved-list-items"></div>
+</div>
+
+<!-- ── AUTH MODAL ── -->
+<div id="auth-overlay" onclick="if(event.target===this)closeAuthModal()">
+  <div id="auth-modal">
+    <span class="auth-close" onclick="closeAuthModal()">✕</span>
+    <h2 id="auth-title">Log in to ODMAP</h2>
+    <p class="auth-sub">Save your prescription list to your account.</p>
+    <form id="auth-form" onsubmit="return submitAuth(event)">
+      <input id="auth-email" type="email" placeholder="Email" autocomplete="username" required/>
+      <input id="auth-password" type="password" placeholder="Password (min 6 chars)" autocomplete="current-password" minlength="6" required/>
+      <div id="auth-msg"></div>
+      <button id="auth-submit" type="submit">Log in</button>
+    </form>
+    <div class="auth-switch">
+      <span id="auth-switch-text">New here?</span>
+      <a id="auth-switch-link" onclick="toggleAuthMode()">Create an account</a>
+    </div>
+  </div>
 </div>
 
 <div id="search-result">
@@ -202,6 +251,164 @@ let currentNodes  = [];
 // position cache: remember where nodes were so we can animate FROM their last position
 let posCache      = {};   // { drugName: {x, y} }
 
+// ─── SUPABASE AUTH + SAVED-LIST SYNC ──────────────────────────────────────────
+// 1. Create a free project at https://supabase.com
+// 2. Run supabase_setup.sql in the project's SQL editor (creates the table).
+// 3. Paste your Project URL and the public "anon" key below
+//    (Dashboard > Project Settings > API). The anon key is safe in client code;
+//    Row Level Security keeps each user limited to their own saved list.
+const SUPABASE_URL  = "YOUR_SUPABASE_URL";   // e.g. https://abcd1234.supabase.co
+const SUPABASE_ANON = "YOUR_SUPABASE_ANON_KEY";
+
+let sb = null;            // Supabase client (null until configured)
+let currentUser = null;   // logged-in user object, or null
+let authMode = "login";   // "login" | "signup"
+
+function supabaseConfigured(){
+  return window.supabase && SUPABASE_URL.startsWith("http") && SUPABASE_ANON && !SUPABASE_ANON.startsWith("YOUR_");
+}
+
+async function initAuth(){
+  if(!supabaseConfigured()){
+    // No backend configured — the app still works, saved list just stays local.
+    setAccountButton(null);
+    return;
+  }
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  const { data } = await sb.auth.getSession();
+  currentUser = data.session?.user || null;
+  setAccountButton(currentUser);
+  if(currentUser) await loadSavedFromCloud();
+
+  // React to login/logout across the session.
+  sb.auth.onAuthStateChange((_event, session)=>{
+    currentUser = session?.user || null;
+    setAccountButton(currentUser);
+  });
+}
+
+function setAccountButton(user){
+  const btn=document.getElementById("account-btn");
+  if(user){ btn.textContent="👤 " + (user.email||"Account") + "  ·  Log out"; }
+  else { btn.textContent="👤 Log in"; }
+}
+
+function onAccountClick(){
+  if(currentUser){ logout(); }
+  else { openAuthModal(); }
+}
+
+// ── Modal open/close/toggle ──
+function openAuthModal(){
+  if(!supabaseConfigured()){
+    alert("Login isn't configured yet.\n\nAdd your Supabase URL and anon key near the top of the script in odmap_v6.html (see SUPABASE_SETUP.md).");
+    return;
+  }
+  document.getElementById("auth-overlay").classList.add("open");
+  document.getElementById("auth-msg").textContent="";
+  document.getElementById("auth-email").focus();
+}
+function closeAuthModal(){ document.getElementById("auth-overlay").classList.remove("open"); }
+
+function toggleAuthMode(){
+  authMode = authMode==="login" ? "signup" : "login";
+  const isLogin = authMode==="login";
+  document.getElementById("auth-title").textContent = isLogin ? "Log in to ODMAP" : "Create your ODMAP account";
+  document.getElementById("auth-submit").textContent = isLogin ? "Log in" : "Sign up";
+  document.getElementById("auth-switch-text").textContent = isLogin ? "New here?" : "Already have an account?";
+  document.getElementById("auth-switch-link").textContent = isLogin ? "Create an account" : "Log in instead";
+  document.getElementById("auth-password").autocomplete = isLogin ? "current-password" : "new-password";
+  document.getElementById("auth-msg").textContent="";
+}
+
+function setAuthMsg(text, kind){
+  const el=document.getElementById("auth-msg");
+  el.textContent=text; el.className=kind||"";
+}
+
+// ── Submit login or signup ──
+async function submitAuth(e){
+  e.preventDefault();
+  const email=document.getElementById("auth-email").value.trim();
+  const password=document.getElementById("auth-password").value;
+  const btn=document.getElementById("auth-submit");
+  btn.disabled=true; setAuthMsg("Working…","");
+
+  try{
+    if(authMode==="signup"){
+      const { data, error } = await sb.auth.signUp({ email, password });
+      if(error) throw error;
+      if(!data.session){
+        // Email confirmation is on — no active session yet.
+        setAuthMsg("Account created. Check your email to confirm, then log in.","success");
+        toggleAuthMode();
+        return false;
+      }
+      currentUser=data.user;
+      await pushSavedToCloud();   // keep whatever they already added locally
+    } else {
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if(error) throw error;
+      currentUser=data.user;
+      await loadSavedFromCloud();
+    }
+    setAccountButton(currentUser);
+    closeAuthModal();
+  } catch(err){
+    setAuthMsg(err.message || "Authentication failed.","error");
+  } finally {
+    btn.disabled=false;
+  }
+  return false;
+}
+
+async function logout(){
+  if(sb) await sb.auth.signOut();
+  currentUser=null;
+  setAccountButton(null);
+  setSyncStatus("");
+}
+
+// ── Saved-list cloud sync ──
+function setSyncStatus(text, kind){
+  const el=document.getElementById("saved-sync-status");
+  if(!el) return;
+  el.textContent=text; el.className=kind||"";
+}
+
+async function loadSavedFromCloud(){
+  if(!sb || !currentUser) return;
+  try{
+    const { data, error } = await sb
+      .from("saved_lists")
+      .select("drugs")
+      .eq("user_id", currentUser.id)
+      .maybeSingle();
+    if(error) throw error;
+    if(data && Array.isArray(data.drugs)){
+      savedList = data.drugs.slice();
+      renderSavedList();
+      refreshGraph();
+    }
+    setSyncStatus("Synced to your account","synced");
+  } catch(err){
+    setSyncStatus("Could not load saved list: "+(err.message||err),"error");
+  }
+}
+
+async function pushSavedToCloud(){
+  if(!sb || !currentUser) return;   // not logged in -> stays local only
+  try{
+    const { error } = await sb
+      .from("saved_lists")
+      .upsert({ user_id: currentUser.id, drugs: savedList, updated_at: new Date().toISOString() });
+    if(error) throw error;
+    setSyncStatus("Saved to your account","synced");
+  } catch(err){
+    setSyncStatus("Sync failed: "+(err.message||err),"error");
+  }
+}
+
 // ─── HISTORY DROPDOWN ─────────────────────────────────────────────────────────
 (function(){
   const d1=document.getElementById("drug1"),d2=document.getElementById("drug2");
@@ -251,8 +458,12 @@ function addToSaved(){
   const inp=document.getElementById("saved-input"),val=inp.value.trim();
   if(!val||savedList.includes(val))return;
   savedList.push(val);renderSavedList();refreshGraph();inp.value="";
+  pushSavedToCloud();
 }
-function removeFromSaved(name){savedList=savedList.filter(s=>s!==name);renderSavedList();refreshGraph();}
+function removeFromSaved(name){
+  savedList=savedList.filter(s=>s!==name);renderSavedList();refreshGraph();
+  pushSavedToCloud();
+}
 function renderSavedList(){
   const c=document.getElementById("saved-list-items");c.innerHTML="";
   savedList.forEach(name=>{
@@ -551,7 +762,7 @@ function searchInteraction(){
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&(document.activeElement.id==="drug1"||document.activeElement.id==="drug2"))searchInteraction();});
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
-window.onload  = ()=>buildGraph("Warfarin");
+window.onload  = ()=>{ buildGraph("Warfarin"); initAuth(); };
 window.onresize= ()=>buildGraph(currentRoot,true);
 </script>
 </body>
