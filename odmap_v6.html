@@ -24,33 +24,6 @@
 
   #saved-btn{background:#4a6741;border:1px solid #8fbe7c;color:#e8f0e4;padding:5px 11px;border-radius:6px;cursor:pointer;font-size:.78rem;font-weight:600;white-space:nowrap;flex-shrink:0}
   #saved-btn:hover{background:#5a7d50}
-  #account-btn{background:#3d4f3e;border:1px solid #8fbe7c;color:#b8d4a8;padding:5px 11px;border-radius:6px;cursor:pointer;font-size:.78rem;font-weight:600;white-space:nowrap;flex-shrink:0}
-  #account-btn:hover{background:#4a6741}
-
-  /* ── SAVED SYNC STATUS ── */
-  #saved-sync-status{font-size:.72rem;color:#7a6e5a;margin-bottom:8px;min-height:1em}
-  #saved-sync-status.synced{color:#3a5e34}
-  #saved-sync-status.error{color:#c0392b}
-
-  /* ── AUTH MODAL ── */
-  #auth-overlay{position:fixed;inset:0;background:#0007;backdrop-filter:blur(2px);z-index:2000;display:none;align-items:center;justify-content:center}
-  #auth-overlay.open{display:flex}
-  #auth-modal{position:relative;background:#f0ebe0;border:1px solid #c5b99a;border-radius:12px;padding:26px 28px;width:340px;max-width:92vw;box-shadow:0 10px 40px #0004;color:#2d3a2e}
-  .auth-close{position:absolute;top:12px;right:14px;cursor:pointer;color:#8a7e6a;font-size:1.1rem}
-  .auth-close:hover{color:#2d3a2e}
-  #auth-title{font-size:1.15rem;color:#2d3a2e;margin-bottom:4px}
-  .auth-sub{font-size:.8rem;color:#7a6e5a;margin-bottom:16px}
-  #auth-form{display:flex;flex-direction:column;gap:10px}
-  #auth-form input{background:#fff;border:1px solid #c5b99a;border-radius:6px;padding:9px 11px;font-size:.88rem;color:#2d3a2e}
-  #auth-form input:focus{outline:none;border-color:#4a6741}
-  #auth-submit{background:#4a6741;border:none;color:#e8f0e4;padding:10px;border-radius:6px;cursor:pointer;font-size:.9rem;font-weight:600;margin-top:4px}
-  #auth-submit:hover{background:#5a7d50}
-  #auth-submit:disabled{opacity:.6;cursor:default}
-  #auth-msg{font-size:.78rem;min-height:1em;line-height:1.4}
-  #auth-msg.error{color:#c0392b}
-  #auth-msg.success{color:#3a5e34}
-  .auth-switch{margin-top:16px;font-size:.8rem;color:#7a6e5a;text-align:center}
-  .auth-switch a{color:#4a6741;cursor:pointer;font-weight:600;text-decoration:underline;margin-left:4px}
 
   #search-area{display:flex;gap:8px;align-items:center;position:relative;flex-shrink:0}
   #search-area input{background:#3d4f3e;border:1px solid #4a6741;border-radius:6px;color:#e8f0e4;padding:5px 10px;font-size:.82rem;width:130px}
@@ -79,11 +52,44 @@
   .saved-item{background:#d8eecf;border:1px solid #a0c896;border-radius:12px;padding:3px 10px;font-size:.78rem;color:#2d4a28;display:flex;align-items:center;gap:5px}
   .saved-item .si-remove{cursor:pointer;color:#c0392b;font-size:.85rem}
 
+  /* ── BACKEND ADD-ON: account button + sync status (does not alter teammate styles) ── */
+  #account-btn{background:#3d4f3e;border:1px solid #8fbe7c;color:#b8d4a8;padding:5px 11px;border-radius:6px;cursor:pointer;font-size:.78rem;font-weight:600;white-space:nowrap;flex-shrink:0}
+  #account-btn:hover{background:#4a6741}
+  #saved-sync-status{font-size:.72rem;color:#7a6e5a;margin-bottom:8px;min-height:1em}
+  #saved-sync-status.synced{color:#3a5e34}
+  #saved-sync-status.error{color:#c0392b}
+  #auth-overlay{position:fixed;inset:0;background:#0007;backdrop-filter:blur(2px);z-index:2000;display:none;align-items:center;justify-content:center}
+  #auth-overlay.open{display:flex}
+  #auth-modal{position:relative;background:#f0ebe0;border:1px solid #c5b99a;border-radius:12px;padding:26px 28px;width:340px;max-width:92vw;box-shadow:0 10px 40px #0004;color:#2d3a2e}
+  .auth-close{position:absolute;top:12px;right:14px;cursor:pointer;color:#8a7e6a;font-size:1.1rem}
+  .auth-close:hover{color:#2d3a2e}
+  #auth-title{font-size:1.15rem;color:#2d3a2e;margin-bottom:4px}
+  .auth-sub{font-size:.8rem;color:#7a6e5a;margin-bottom:16px}
+  #auth-form{display:flex;flex-direction:column;gap:10px}
+  #auth-form input{background:#fff;border:1px solid #c5b99a;border-radius:6px;padding:9px 11px;font-size:.88rem;color:#2d3a2e}
+  #auth-form input:focus{outline:none;border-color:#4a6741}
+  #auth-submit{background:#4a6741;border:none;color:#e8f0e4;padding:10px;border-radius:6px;cursor:pointer;font-size:.9rem;font-weight:600;margin-top:4px}
+  #auth-submit:hover{background:#5a7d50}
+  #auth-submit:disabled{opacity:.6;cursor:default}
+  #auth-msg{font-size:.78rem;min-height:1em;line-height:1.4}
+  #auth-msg.error{color:#c0392b}
+  #auth-msg.success{color:#3a5e34}
+  .auth-switch{margin-top:16px;font-size:.8rem;color:#7a6e5a;text-align:center}
+  .auth-switch a{color:#4a6741;cursor:pointer;font-weight:600;text-decoration:underline;margin-left:4px}
+
   #main{display:flex;flex:1;overflow:hidden}
   #graph-area{flex:1;position:relative}
   svg{width:100%;height:100%}
 
-  #info-panel{width:300px;background:#eee8d8;border-left:2px solid #c5b99a;overflow-y:auto;padding:0;flex-shrink:0;display:none;flex-direction:column}
+  /* The right-hand panel is a vertical stack that can hold any number of cards
+     (drug cards and/or an interaction card). Adjacent cards are separated by a
+     draggable horizontal divider. Each card scrolls independently and has its
+     own close button. The panel only shows when at least one card is open. */
+  #info-panel{width:300px;background:#eee8d8;border-left:2px solid #c5b99a;padding:0;flex-shrink:0;display:none;flex-direction:column;overflow:hidden}
+  .info-card{overflow-y:auto;display:flex;flex-direction:column;min-height:0;flex:1 1 0}
+  .card-divider{flex:0 0 7px;height:7px;background:#c5b99a;cursor:row-resize;position:relative}
+  .card-divider:hover{background:#a99d80}
+  .card-divider::after{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:34px;height:3px;border-radius:2px;background:#8a7e6a}
   .card-top-bar{display:flex;align-items:center;justify-content:flex-start;background:#ddd5c2;padding:8px 12px 0}
   .close-panel-btn-top{background:none;border:1px solid #c5b99a;border-radius:6px;color:#5a5040;padding:3px 9px;cursor:pointer;font-size:.78rem}
   .close-panel-btn-top:hover{background:#c5b99a;color:#2d3a2e}
@@ -92,6 +98,8 @@
   .card-class{font-size:.75rem;color:#7a6e5a;margin-top:2px}
   .pronunc-btn{background:#f5f0e8;border:1px solid #c5b99a;border-radius:6px;color:#4a6741;cursor:pointer;padding:3px 8px;font-size:.75rem;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
   .pronunc-btn:hover{background:#ddd5c2}
+  .ingredient-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:2px}
+  .pronunc-btn.ingredient{font-size:.72rem;padding:2px 7px}
   .card-body{padding:12px 18px;flex:1}
   .card-section-title{font-size:.68rem;color:#7a6e5a;text-transform:uppercase;letter-spacing:1px;margin-top:12px;margin-bottom:3px;font-weight:600}
   .card-val{font-size:.83rem;color:#2d3a2e;line-height:1.5}
@@ -107,8 +115,22 @@
   .icard.moderate{border-left-color:#d48600}
   .icard.mild{border-left-color:#27ae60}
   .icard .ic-sub{font-size:.73rem;color:#5a5040;margin-top:3px;line-height:1.4}
-  .src-link{font-size:.7rem;color:#4a6741;text-decoration:none;display:inline-block;margin-top:3px}
+  .src-link{font-size:.7rem;color:#4a6741;text-decoration:none;display:inline-flex;align-items:center;gap:3px;margin-top:3px}
   .src-link:hover{text-decoration:underline}
+  /* "arrow out of box" external-link icon used on all links that open a new tab */
+  .ext-ico{width:.72em;height:.72em;flex:0 0 auto;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-1px}
+
+  /* Google-Maps-style horizontal photo gallery (thumbnails from Drugs.com) */
+  .gallery{display:flex;gap:8px;overflow-x:auto;padding:4px 0 8px;scrollbar-width:thin;scrollbar-color:#c5b99a transparent}
+  .gallery::-webkit-scrollbar{height:6px}
+  .gallery::-webkit-scrollbar-thumb{background:#c5b99a;border-radius:3px}
+  .gphoto{flex:0 0 112px;width:112px;text-decoration:none;color:#2d3a2e}
+  .gphoto .gthumb{width:112px;height:84px;border-radius:7px;border:1px solid #c5b99a;object-fit:cover;background:#f0ebe0;display:block}
+  .gphoto .gthumb-fallback{width:112px;height:84px;border-radius:7px;border:1px dashed #b7a98a;background:#f0ebe0;display:flex;align-items:center;justify-content:center;text-align:center;font-size:.7rem;color:#8a7e6a;padding:4px;line-height:1.25}
+  .gphoto:hover .gthumb,.gphoto:hover .gthumb-fallback{border-color:#4a6741;box-shadow:0 0 0 2px #4a674133}
+  .gcap{font-size:.68rem;line-height:1.25;margin-top:4px;color:#3d3028}
+  .gcap b{color:#2d3a2e}
+  .gcap .gcap-sub{color:#7a6e5a}
 
   #legend{position:absolute;bottom:14px;left:14px;background:#f0ebe0cc;border:1px solid #c5b99a;border-radius:8px;padding:10px 14px;font-size:.71rem;line-height:1.9;backdrop-filter:blur(4px)}
   #legend .leg-title{color:#7a6e5a;margin-bottom:2px;font-weight:600;font-size:.7rem;text-transform:uppercase;letter-spacing:.8px}
@@ -147,7 +169,7 @@
   <div id="saved-list-items"></div>
 </div>
 
-<!-- ── AUTH MODAL ── -->
+<!-- ── BACKEND ADD-ON: auth modal ── -->
 <div id="auth-overlay" onclick="if(event.target===this)closeAuthModal()">
   <div id="auth-modal">
     <span class="auth-close" onclick="closeAuthModal()">✕</span>
@@ -176,10 +198,10 @@
   <div id="graph-area">
     <svg id="svg"></svg>
     <div id="legend">
-      <div class="leg-title">Severity</div>
+      <div class="leg-title">Severity <span style="text-transform:none;font-weight:400;color:#8a7e6a">(color only)</span></div>
       <div class="leg-row"><svg width="28" height="10"><line x1="0" y1="5" x2="28" y2="5" stroke="#c0392b" stroke-width="2.5"/></svg> Severe</div>
-      <div class="leg-row"><svg width="28" height="10"><line x1="0" y1="5" x2="28" y2="5" stroke="#d48600" stroke-width="2" stroke-dasharray="6,3"/></svg> Moderate</div>
-      <div class="leg-row"><svg width="28" height="10"><line x1="0" y1="5" x2="28" y2="5" stroke="#27ae60" stroke-width="1.5" stroke-dasharray="2,3"/></svg> Mild</div>
+      <div class="leg-row"><svg width="28" height="10"><line x1="0" y1="5" x2="28" y2="5" stroke="#d48600" stroke-width="2.5"/></svg> Moderate</div>
+      <div class="leg-row"><svg width="28" height="10"><line x1="0" y1="5" x2="28" y2="5" stroke="#27ae60" stroke-width="2.5"/></svg> Mild</div>
       <div class="leg-title" style="margin-top:8px">Interaction Type</div>
       <div class="leg-row"><svg width="28" height="10"><line x1="0" y1="5" x2="28" y2="5" stroke="#5a5040" stroke-width="2"/></svg> Hematologic</div>
       <div class="leg-row"><svg width="28" height="10"><line x1="0" y1="5" x2="28" y2="5" stroke="#5a5040" stroke-width="2" stroke-dasharray="8,4"/></svg> Metabolic</div>
@@ -195,42 +217,49 @@
 
 <script>
 // ─── DATA ─────────────────────────────────────────────────────────────────────
+// Description citations point to the drug's StatPearls monograph on the NLM
+// NCBI Bookshelf (ncbi.nlm.nih.gov/books/…) — a peer-reviewed, reputable
+// National Library of Medicine source. Every NBK ID below was verified to
+// resolve to the correct drug monograph (Oct 2026).
 const ALL_DRUGS = {
-  "Warfarin":   {ingredient:"Warfarin sodium",        pronounce:"WAR-fuh-rin",     cls:"Anticoagulant",        similar:["Coumadin","Jantoven"],               citation:"https://www.ncbi.nlm.nih.gov/books/NBK470395/",  desc:"Prevents blood clots by inhibiting Vitamin K-dependent clotting factors."},
+  "Warfarin":   {ingredient:"Warfarin sodium",        pronounce:"WAR-fuh-rin",     cls:"Anticoagulant",        similar:["Coumadin","Jantoven"],               citation:"https://www.ncbi.nlm.nih.gov/books/NBK470313/",  desc:"Prevents blood clots by inhibiting Vitamin K-dependent clotting factors."},
   "Aspirin":    {ingredient:"Acetylsalicylic acid",   pronounce:"AS-pir-in",       cls:"NSAID / Antiplatelet", similar:["Bayer","Bufferin","Ecotrin"],         citation:"https://www.ncbi.nlm.nih.gov/books/NBK519032/",  desc:"Reduces pain, fever, and platelet aggregation."},
-  "Lipitor":    {ingredient:"Atorvastatin",           pronounce:"LIP-ih-tor",      cls:"Statin",               similar:["Torvast"],                           citation:"https://www.ncbi.nlm.nih.gov/books/NBK430882/",  desc:"Lowers LDL cholesterol by inhibiting HMG-CoA reductase."},
-  "Paxil":      {ingredient:"Paroxetine",             pronounce:"PAX-il",          cls:"SSRI",                 similar:["Pexeva","Brisdelle"],                citation:"https://www.ncbi.nlm.nih.gov/books/NBK546090/",  desc:"Selective serotonin reuptake inhibitor for depression and anxiety."},
+  "Lipitor":    {ingredient:"Atorvastatin",           pronounce:"LIP-ih-tor",      cls:"Statin",               similar:["Torvast"],                           citation:"https://www.ncbi.nlm.nih.gov/books/NBK430779/",  desc:"Lowers LDL cholesterol by inhibiting HMG-CoA reductase."},
+  "Paxil":      {ingredient:"Paroxetine",             pronounce:"PAX-il",          cls:"SSRI",                 similar:["Pexeva","Brisdelle"],                citation:"https://www.ncbi.nlm.nih.gov/books/NBK526022/",  desc:"Selective serotonin reuptake inhibitor for depression and anxiety."},
   "Prozac":     {ingredient:"Fluoxetine",             pronounce:"PRO-zak",         cls:"SSRI",                 similar:["Sarafem","Rapiflux"],                citation:"https://www.ncbi.nlm.nih.gov/books/NBK459223/",  desc:"Increases serotonin levels; treats depression and OCD."},
   "Xanax":      {ingredient:"Alprazolam",             pronounce:"ZAN-ax",          cls:"Benzodiazepine",       similar:["Niravam","Alprazolam ER"],           citation:"https://www.ncbi.nlm.nih.gov/books/NBK538165/",  desc:"Short-term management of anxiety disorders."},
   "Metformin":  {ingredient:"Metformin HCl",          pronounce:"met-FOR-min",     cls:"Biguanide",            similar:["Glucophage","Fortamet","Glumetza"],  citation:"https://www.ncbi.nlm.nih.gov/books/NBK518983/",  desc:"First-line treatment for type 2 diabetes; reduces hepatic glucose output."},
-  "Lisinopril": {ingredient:"Lisinopril",             pronounce:"lye-SIN-oh-pril", cls:"ACE Inhibitor",        similar:["Zestril","Prinivil","Qbrelis"],      citation:"https://www.ncbi.nlm.nih.gov/books/NBK482440/",  desc:"Treats high blood pressure and heart failure."},
-  "Advil":      {ingredient:"Ibuprofen",              pronounce:"AD-vil",          cls:"NSAID",                similar:["Motrin","Nuprin","Ibuprofen"],       citation:"https://www.ncbi.nlm.nih.gov/books/NBK526103/",  desc:"Reduces inflammation, pain, and fever."},
+  "Lisinopril": {ingredient:"Lisinopril",             pronounce:"lye-SIN-oh-pril", cls:"ACE Inhibitor",        similar:["Zestril","Prinivil","Qbrelis"],      citation:"https://www.ncbi.nlm.nih.gov/books/NBK482230/",  desc:"Treats high blood pressure and heart failure."},
+  "Advil":      {ingredient:"Ibuprofen",              pronounce:"AD-vil",          cls:"NSAID",                similar:["Motrin","Nuprin","Ibuprofen"],       citation:"https://www.ncbi.nlm.nih.gov/books/NBK542299/",  desc:"Reduces inflammation, pain, and fever."},
   "Amoxil":     {ingredient:"Amoxicillin trihydrate", pronounce:"a-MOX-il",        cls:"Antibiotic",           similar:["Trimox","Moxatag","Amoxicillin"],    citation:"https://www.ncbi.nlm.nih.gov/books/NBK482250/",  desc:"Broad-spectrum penicillin antibiotic."},
-  "Lanoxin":    {ingredient:"Digoxin",                pronounce:"la-NOX-in",       cls:"Cardiac Glycoside",    similar:["Digitek","Digoxin"],                 citation:"https://www.ncbi.nlm.nih.gov/books/NBK470554/",  desc:"Strengthens heart contractions; treats heart failure and AFib."},
-  "Zoloft":     {ingredient:"Sertraline",             pronounce:"ZO-loft",         cls:"SSRI",                 similar:["Lustral"],                           citation:"https://www.ncbi.nlm.nih.gov/books/NBK547849/",  desc:"Treats depression, panic disorder, and PTSD."},
+  "Lanoxin":    {ingredient:"Digoxin",                pronounce:"la-NOX-in",       cls:"Cardiac Glycoside",    similar:["Digitek","Digoxin"],                 citation:"https://www.ncbi.nlm.nih.gov/books/NBK556025/",  desc:"Strengthens heart contractions; treats heart failure and AFib."},
+  "Zoloft":     {ingredient:"Sertraline",             pronounce:"ZO-loft",         cls:"SSRI",                 similar:["Lustral"],                           citation:"https://www.ncbi.nlm.nih.gov/books/NBK547689/",  desc:"Treats depression, panic disorder, and PTSD."},
 };
 
+// Each interaction citation points to a specific, credible, peer-reviewed source
+// (NCBI PMC / PubMed) that directly documents THAT drug-pair interaction and its
+// mechanism — not a generic drug-label search. Verified Oct 2026.
 const ALL_INTERACTIONS_RAW = [
-  {drug_a:"Warfarin",  drug_b:"Aspirin",  severity:"severe",  type:"Hematologic",  citation:"https://labels.fda.gov/0cbce382-9c88-4f58-ae0f-532a841e8f95",  desc:"Taking Aspirin with Warfarin significantly increases the risk of serious bleeding because both medications thin the blood through different mechanisms."},
-  {drug_a:"Warfarin",  drug_b:"Advil",  severity:"moderate",  type:"Hematologic",  citation:"https://labels.fda.gov/0cbce382-9c88-4f58-ae0f-532a841e8f95",  desc:"Advil can damage the stomach lining and impair blood clotting, which raises the risk of severe gastrointestinal bleeding when combined with Warfarin."},
-  {drug_a:"Warfarin",  drug_b:"Paxil",  severity:"moderate",  type:"Hematologic",  citation:"https://labels.fda.gov/0cbce382-9c88-4f58-ae0f-532a841e8f95",  desc:"Paxil can interfere with platelet function and blood protein binding, potentially increasing the risk of bleeding when taken with Warfarin."},
-  {drug_a:"Warfarin",  drug_b:"Prozac",  severity:"moderate",  type:"Hematologic",  citation:"https://labels.fda.gov/0cbce382-9c88-4f58-ae0f-532a841e8f95",  desc:"Prozac can inhibit the metabolism of Warfarin and reduce platelet aggregation, leading to higher blood levels of Warfarin and increased bleeding risk."},
-  {drug_a:"Warfarin",  drug_b:"Zoloft",  severity:"moderate",  type:"Hematologic",  citation:"https://labels.fda.gov/0cbce382-9c88-4f58-ae0f-532a841e8f95",  desc:"Zoloft may alter Warfarin blood concentrations and platelet activity, requiring closer monitoring of clotting times to avoid bleeding complications."},
-  {drug_a:"Warfarin",  drug_b:"Lipitor",  severity:"moderate",  type:"Metabolic",  citation:"https://labels.fda.gov/0cbce382-9c88-4f58-ae0f-532a841e8f95",  desc:"Lipitor weakly inhibits CYP3A4 enzymes that help break down Warfarin, which may slightly alter Warfarin levels and anticoagulation effects."},
-  {drug_a:"Warfarin",  drug_b:"Xanax",  severity:"moderate",  type:"Metabolic",  citation:"https://labels.fda.gov/0cbce382-9c88-4f58-ae0f-532a841e8f95",  desc:"Xanax can interact with metabolic enzymes responsible for clearing Warfarin, which may alter the effectiveness of your blood thinner."},
-  {drug_a:"Warfarin",  drug_b:"Amoxil",  severity:"moderate",  type:"Hematologic",  citation:"https://labels.fda.gov/0cbce382-9c88-4f58-ae0f-532a841e8f95",  desc:"Antibiotics like Amoxil can alter gut flora and blood clotting, potentially changing Warfarin levels and increasing bleeding risk."},
-  {drug_a:"Lipitor",  drug_b:"Lanoxin",  severity:"moderate",  type:"Cardiovascular",  citation:"https://labels.fda.gov/00afce9b-48c9-487a-a738-e359c005c707",  desc:"Lipitor can increase blood levels of Lanoxin, increasing the potential for digoxin-related heart toxicity."},
-  {drug_a:"Paxil",  drug_b:"Aspirin",  severity:"moderate",  type:"Hematologic",  citation:"https://labels.fda.gov/009d8b89-eab9-43ba-b077-86bfa993a745",  desc:"Combining Paxil and Aspirin increases the likelihood of gastrointestinal bleeding by additive impairment of platelet function."},
-  {drug_a:"Paxil",  drug_b:"Prozac",  severity:"severe",  type:"Neurological",  citation:"https://labels.fda.gov/009d8b89-eab9-43ba-b077-86bfa993a745",  desc:"Combining two SSRIs like Paxil and Prozac can cause excessively high serotonin levels, leading to a potentially life-threatening condition called serotonin syndrome."},
-  {drug_a:"Paxil",  drug_b:"Zoloft",  severity:"severe",  type:"Neurological",  citation:"https://labels.fda.gov/009d8b89-eab9-43ba-b077-86bfa993a745",  desc:"Taking Paxil together with Zoloft can dangerously increase serotonin levels in the brain and trigger serotonin syndrome."},
-  {drug_a:"Prozac",  drug_b:"Xanax",  severity:"moderate",  type:"Neurological",  citation:"https://labels.fda.gov/02283de9-6087-45f7-a9ce-3b082ce860de",  desc:"Prozac decreases the liver breakdown of Xanax, leading to elevated Xanax levels and increased sedation or motor impairment."},
-  {drug_a:"Prozac",  drug_b:"Aspirin",  severity:"moderate",  type:"Hematologic",  citation:"https://labels.fda.gov/02283de9-6087-45f7-a9ce-3b082ce860de",  desc:"Concurrent use of Prozac and Aspirin can weaken blood clotting ability and increase your risk of upper gastrointestinal bleeding."},
-  {drug_a:"Prozac",  drug_b:"Advil",  severity:"moderate",  type:"Hematologic",  citation:"https://labels.fda.gov/02283de9-6087-45f7-a9ce-3b082ce860de",  desc:"Combining Prozac and Advil substantially raises the risk of stomach ulcers and bleeding due to their combined effect on platelets and stomach protection."},
-  {drug_a:"Prozac",  drug_b:"Zoloft",  severity:"severe",  type:"Neurological",  citation:"https://labels.fda.gov/02283de9-6087-45f7-a9ce-3b082ce860de",  desc:"Using Prozac alongside Zoloft can cause severe additive serotonergic activity, increasing the danger of serotonin syndrome."},
-  {drug_a:"Xanax",  drug_b:"Lanoxin",  severity:"moderate",  type:"Cardiovascular",  citation:"https://labels.fda.gov/02840ea6-e4a0-96a0-e063-6394a90a19ae",  desc:"Xanax can reduce the clearance of Lanoxin, raising digoxin concentrations in the bloodstream and increasing the risk of toxicity."},
-  {drug_a:"Metformin",  drug_b:"Lanoxin",  severity:"moderate",  type:"Cardiovascular",  citation:"https://labels.fda.gov/06ade2e1-5981-4e3d-b7e9-7ff083eb4551",  desc:"Lanoxin and Metformin can compete for elimination in the kidneys, potentially raising Lanoxin levels and necessitating close monitoring."},
-  {drug_a:"Lisinopril",  drug_b:"Advil",  severity:"moderate",  type:"Cardiovascular",  citation:"https://labels.fda.gov/00f67e1a-6999-4295-9c9f-fcb1ce9711b8",  desc:"Advil can reduce the blood-pressure-lowering effect of Lisinopril and increase the risk of acute kidney impairment."},
-  {drug_a:"Advil",  drug_b:"Lanoxin",  severity:"moderate",  type:"Cardiovascular",  citation:"https://labels.fda.gov/00653b7c-7099-487e-9a01-e89781c21323",  desc:"Advil can decrease kidney function and reduce the clearance of Lanoxin, which may increase Lanoxin levels and toxicity."},
+  {drug_a:"Warfarin",  drug_b:"Aspirin",  severity:"severe",  type:"Hematologic",  citation:"https://pmc.ncbi.nlm.nih.gov/articles/PMC5336805/",  desc:"Taking Aspirin with Warfarin significantly increases the risk of serious bleeding because both medications thin the blood through different mechanisms."},
+  {drug_a:"Warfarin",  drug_b:"Advil",  severity:"moderate",  type:"Hematologic",  citation:"https://pmc.ncbi.nlm.nih.gov/articles/PMC7665225/",  desc:"Advil can damage the stomach lining and impair blood clotting, which raises the risk of severe gastrointestinal bleeding when combined with Warfarin."},
+  {drug_a:"Warfarin",  drug_b:"Paxil",  severity:"moderate",  type:"Hematologic",  citation:"https://pubmed.ncbi.nlm.nih.gov/28129313/",  desc:"Paxil can interfere with platelet function and blood protein binding, potentially increasing the risk of bleeding when taken with Warfarin."},
+  {drug_a:"Warfarin",  drug_b:"Prozac",  severity:"moderate",  type:"Hematologic",  citation:"https://pubmed.ncbi.nlm.nih.gov/28129313/",  desc:"Prozac can inhibit the metabolism of Warfarin and reduce platelet aggregation, leading to higher blood levels of Warfarin and increased bleeding risk."},
+  {drug_a:"Warfarin",  drug_b:"Zoloft",  severity:"moderate",  type:"Hematologic",  citation:"https://pubmed.ncbi.nlm.nih.gov/28129313/",  desc:"Zoloft may alter Warfarin blood concentrations and platelet activity, requiring closer monitoring of clotting times to avoid bleeding complications."},
+  {drug_a:"Warfarin",  drug_b:"Lipitor",  severity:"moderate",  type:"Metabolic",  citation:"https://pmc.ncbi.nlm.nih.gov/articles/PMC8861410/",  desc:"Lipitor weakly inhibits CYP3A4 enzymes that help break down Warfarin, which may slightly alter Warfarin levels and anticoagulation effects."},
+  {drug_a:"Warfarin",  drug_b:"Xanax",  severity:"moderate",  type:"Metabolic",  citation:"https://pmc.ncbi.nlm.nih.gov/articles/PMC7485961/",  desc:"Xanax can interact with metabolic enzymes responsible for clearing Warfarin, which may alter the effectiveness of your blood thinner."},
+  {drug_a:"Warfarin",  drug_b:"Amoxil",  severity:"moderate",  type:"Hematologic",  citation:"https://pmc.ncbi.nlm.nih.gov/articles/PMC10455514/",  desc:"Antibiotics like Amoxil can alter gut flora and blood clotting, potentially changing Warfarin levels and increasing bleeding risk."},
+  {drug_a:"Lipitor",  drug_b:"Lanoxin",  severity:"moderate",  type:"Cardiovascular",  citation:"https://pubmed.ncbi.nlm.nih.gov/10631627/",  desc:"Lipitor can increase blood levels of Lanoxin, increasing the potential for digoxin-related heart toxicity."},
+  {drug_a:"Paxil",  drug_b:"Aspirin",  severity:"moderate",  type:"Hematologic",  citation:"https://pmc.ncbi.nlm.nih.gov/articles/PMC9402708/",  desc:"Combining Paxil and Aspirin increases the likelihood of gastrointestinal bleeding by additive impairment of platelet function."},
+  {drug_a:"Paxil",  drug_b:"Prozac",  severity:"severe",  type:"Neurological",  citation:"https://pmc.ncbi.nlm.nih.gov/articles/PMC12140641/",  desc:"Combining two SSRIs like Paxil and Prozac can cause excessively high serotonin levels, leading to a potentially life-threatening condition called serotonin syndrome."},
+  {drug_a:"Paxil",  drug_b:"Zoloft",  severity:"severe",  type:"Neurological",  citation:"https://pmc.ncbi.nlm.nih.gov/articles/PMC12140641/",  desc:"Taking Paxil together with Zoloft can dangerously increase serotonin levels in the brain and trigger serotonin syndrome."},
+  {drug_a:"Prozac",  drug_b:"Xanax",  severity:"moderate",  type:"Neurological",  citation:"https://pubmed.ncbi.nlm.nih.gov/1924640/",  desc:"Prozac decreases the liver breakdown of Xanax, leading to elevated Xanax levels and increased sedation or motor impairment."},
+  {drug_a:"Prozac",  drug_b:"Aspirin",  severity:"moderate",  type:"Hematologic",  citation:"https://pmc.ncbi.nlm.nih.gov/articles/PMC9402708/",  desc:"Concurrent use of Prozac and Aspirin can weaken blood clotting ability and increase your risk of upper gastrointestinal bleeding."},
+  {drug_a:"Prozac",  drug_b:"Advil",  severity:"moderate",  type:"Hematologic",  citation:"https://pmc.ncbi.nlm.nih.gov/articles/PMC9402708/",  desc:"Combining Prozac and Advil substantially raises the risk of stomach ulcers and bleeding due to their combined effect on platelets and stomach protection."},
+  {drug_a:"Prozac",  drug_b:"Zoloft",  severity:"severe",  type:"Neurological",  citation:"https://pmc.ncbi.nlm.nih.gov/articles/PMC12140641/",  desc:"Using Prozac alongside Zoloft can cause severe additive serotonergic activity, increasing the danger of serotonin syndrome."},
+  {drug_a:"Xanax",  drug_b:"Lanoxin",  severity:"moderate",  type:"Cardiovascular",  citation:"https://pubmed.ncbi.nlm.nih.gov/8330464/",  desc:"Xanax can reduce the clearance of Lanoxin, raising digoxin concentrations in the bloodstream and increasing the risk of toxicity."},
+  {drug_a:"Metformin",  drug_b:"Lanoxin",  severity:"moderate",  type:"Cardiovascular",  citation:"https://pmc.ncbi.nlm.nih.gov/articles/PMC3675737/",  desc:"Lanoxin and Metformin can compete for elimination in the kidneys, potentially raising Lanoxin levels and necessitating close monitoring."},
+  {drug_a:"Lisinopril",  drug_b:"Advil",  severity:"moderate",  type:"Cardiovascular",  citation:"https://pubmed.ncbi.nlm.nih.gov/2218652/",  desc:"Advil can reduce the blood-pressure-lowering effect of Lisinopril and increase the risk of acute kidney impairment."},
+  {drug_a:"Advil",  drug_b:"Lanoxin",  severity:"moderate",  type:"Cardiovascular",  citation:"https://pmc.ncbi.nlm.nih.gov/articles/PMC1368422/",  desc:"Advil can decrease kidney function and reduce the clearance of Lanoxin, which may increase Lanoxin levels and toxicity."},
 ];
 
 const ALL_INTERACTIONS = ALL_INTERACTIONS_RAW.map(r => ({
@@ -251,54 +280,39 @@ let currentNodes  = [];
 // position cache: remember where nodes were so we can animate FROM their last position
 let posCache      = {};   // { drugName: {x, y} }
 
-// ─── SUPABASE AUTH + SAVED-LIST SYNC ──────────────────────────────────────────
-// 1. Create a free project at https://supabase.com
-// 2. Run supabase_setup.sql in the project's SQL editor (creates the table).
+// ─── BACKEND ADD-ON: SUPABASE AUTH + SAVED-LIST SYNC ──────────────────────────
+// 1. Create / reuse a Supabase project at https://supabase.com
+// 2. Run supabase_setup.sql in the SQL editor (creates the saved_lists table).
 // 3. Paste your Project URL and the public "anon" key below
 //    (Dashboard > Project Settings > API). The anon key is safe in client code;
 //    Row Level Security keeps each user limited to their own saved list.
 const SUPABASE_URL  = "YOUR_SUPABASE_URL";   // e.g. https://abcd1234.supabase.co
 const SUPABASE_ANON = "YOUR_SUPABASE_ANON_KEY";
 
-let sb = null;            // Supabase client (null until configured)
-let currentUser = null;   // logged-in user object, or null
-let authMode = "login";   // "login" | "signup"
+let sb = null;
+let currentUser = null;
+let authMode = "login";
 
 function supabaseConfigured(){
   return window.supabase && SUPABASE_URL.startsWith("http") && SUPABASE_ANON && !SUPABASE_ANON.startsWith("YOUR_");
 }
-
 async function initAuth(){
-  if(!supabaseConfigured()){
-    // No backend configured — the app still works, saved list just stays local.
-    setAccountButton(null);
-    return;
-  }
+  if(!supabaseConfigured()){ setAccountButton(null); return; }
   sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
   const { data } = await sb.auth.getSession();
   currentUser = data.session?.user || null;
   setAccountButton(currentUser);
   if(currentUser) await loadSavedFromCloud();
-
-  // React to login/logout across the session.
   sb.auth.onAuthStateChange((_event, session)=>{
     currentUser = session?.user || null;
     setAccountButton(currentUser);
   });
 }
-
 function setAccountButton(user){
   const btn=document.getElementById("account-btn");
-  if(user){ btn.textContent="👤 " + (user.email||"Account") + "  ·  Log out"; }
-  else { btn.textContent="👤 Log in"; }
+  btn.textContent = user ? "👤 " + (user.email||"Account") + "  ·  Log out" : "👤 Log in";
 }
-
-function onAccountClick(){
-  if(currentUser){ logout(); }
-  else { openAuthModal(); }
-}
-
-// ── Modal open/close/toggle ──
+function onAccountClick(){ currentUser ? logout() : openAuthModal(); }
 function openAuthModal(){
   if(!supabaseConfigured()){
     alert("Login isn't configured yet.\n\nAdd your Supabase URL and anon key near the top of the script in odmap_v6.html (see SUPABASE_SETUP.md).");
@@ -309,7 +323,6 @@ function openAuthModal(){
   document.getElementById("auth-email").focus();
 }
 function closeAuthModal(){ document.getElementById("auth-overlay").classList.remove("open"); }
-
 function toggleAuthMode(){
   authMode = authMode==="login" ? "signup" : "login";
   const isLogin = authMode==="login";
@@ -320,93 +333,72 @@ function toggleAuthMode(){
   document.getElementById("auth-password").autocomplete = isLogin ? "current-password" : "new-password";
   document.getElementById("auth-msg").textContent="";
 }
-
-function setAuthMsg(text, kind){
-  const el=document.getElementById("auth-msg");
-  el.textContent=text; el.className=kind||"";
-}
-
-// ── Submit login or signup ──
+function setAuthMsg(text, kind){ const el=document.getElementById("auth-msg"); el.textContent=text; el.className=kind||""; }
 async function submitAuth(e){
   e.preventDefault();
   const email=document.getElementById("auth-email").value.trim();
   const password=document.getElementById("auth-password").value;
   const btn=document.getElementById("auth-submit");
   btn.disabled=true; setAuthMsg("Working…","");
-
   try{
     if(authMode==="signup"){
       const { data, error } = await sb.auth.signUp({ email, password });
       if(error) throw error;
-      if(!data.session){
-        // Email confirmation is on — no active session yet.
-        setAuthMsg("Account created. Check your email to confirm, then log in.","success");
-        toggleAuthMode();
-        return false;
-      }
-      currentUser=data.user;
-      await pushSavedToCloud();   // keep whatever they already added locally
+      if(!data.session){ setAuthMsg("Account created. Check your email to confirm, then log in.","success"); toggleAuthMode(); return false; }
+      currentUser=data.user; await pushSavedToCloud();
     } else {
       const { data, error } = await sb.auth.signInWithPassword({ email, password });
       if(error) throw error;
-      currentUser=data.user;
-      await loadSavedFromCloud();
+      currentUser=data.user; await loadSavedFromCloud();
     }
     setAccountButton(currentUser);
     closeAuthModal();
-  } catch(err){
-    setAuthMsg(err.message || "Authentication failed.","error");
-  } finally {
-    btn.disabled=false;
-  }
+  } catch(err){ setAuthMsg(err.message || "Authentication failed.","error"); }
+  finally{ btn.disabled=false; }
   return false;
 }
-
-async function logout(){
-  if(sb) await sb.auth.signOut();
-  currentUser=null;
-  setAccountButton(null);
-  setSyncStatus("");
-}
-
-// ── Saved-list cloud sync ──
-function setSyncStatus(text, kind){
-  const el=document.getElementById("saved-sync-status");
-  if(!el) return;
-  el.textContent=text; el.className=kind||"";
-}
-
+async function logout(){ if(sb) await sb.auth.signOut(); currentUser=null; setAccountButton(null); setSyncStatus(""); }
+function setSyncStatus(text, kind){ const el=document.getElementById("saved-sync-status"); if(!el)return; el.textContent=text; el.className=kind||""; }
 async function loadSavedFromCloud(){
   if(!sb || !currentUser) return;
   try{
-    const { data, error } = await sb
-      .from("saved_lists")
-      .select("drugs")
-      .eq("user_id", currentUser.id)
-      .maybeSingle();
+    const { data, error } = await sb.from("saved_lists").select("drugs").eq("user_id", currentUser.id).maybeSingle();
     if(error) throw error;
-    if(data && Array.isArray(data.drugs)){
-      savedList = data.drugs.slice();
-      renderSavedList();
-      refreshGraph();
-    }
+    if(data && Array.isArray(data.drugs)){ savedList = data.drugs.slice(); renderSavedList(); refreshGraph(); }
     setSyncStatus("Synced to your account","synced");
-  } catch(err){
-    setSyncStatus("Could not load saved list: "+(err.message||err),"error");
-  }
+  } catch(err){ setSyncStatus("Could not load saved list: "+(err.message||err),"error"); }
 }
-
 async function pushSavedToCloud(){
   if(!sb || !currentUser) return;   // not logged in -> stays local only
   try{
-    const { error } = await sb
-      .from("saved_lists")
-      .upsert({ user_id: currentUser.id, drugs: savedList, updated_at: new Date().toISOString() });
+    const { error } = await sb.from("saved_lists").upsert({ user_id: currentUser.id, drugs: savedList, updated_at: new Date().toISOString() });
     if(error) throw error;
     setSyncStatus("Saved to your account","synced");
-  } catch(err){
-    setSyncStatus("Sync failed: "+(err.message||err),"error");
-  }
+  } catch(err){ setSyncStatus("Sync failed: "+(err.message||err),"error"); }
+}
+
+// ─── NAME RESOLUTION ───────────────────────────────────────────────────────────
+// Resolve any user-typed name to a canonical drug key. Matches (case-insensitively):
+//   1. the canonical brand key itself (e.g. "Warfarin")
+//   2. any alternative/brand name in that drug's `similar` list (e.g. "Coumadin")
+//   3. the active ingredient (e.g. "Warfarin sodium")
+// Returns the canonical key, or null if nothing matches.
+function resolveDrugName(input){
+  if(!input)return null;
+  const q=input.trim().toLowerCase();
+  if(!q)return null;
+  // 1. exact canonical key
+  const keyExact=Object.keys(ALL_DRUGS).find(k=>k.toLowerCase()===q);
+  if(keyExact)return keyExact;
+  // 2. alternative brand name (same medication, different name)
+  const bySimilar=Object.keys(ALL_DRUGS).find(k=>
+    (ALL_DRUGS[k].similar||[]).some(s=>s.toLowerCase()===q));
+  if(bySimilar)return bySimilar;
+  // 3. active ingredient match
+  const byIngredient=Object.keys(ALL_DRUGS).find(k=>
+    (ALL_DRUGS[k].ingredient||"").toLowerCase()===q);
+  if(byIngredient)return byIngredient;
+  return null;
 }
 
 // ─── HISTORY DROPDOWN ─────────────────────────────────────────────────────────
@@ -429,7 +421,7 @@ function renderHistChips(){
       e.preventDefault();
       const inp=window._activeSearchInput(); if(inp) inp.value=h;
       document.getElementById("history-dropdown").style.display="none";
-      const key=Object.keys(ALL_DRUGS).find(k=>k.toLowerCase()===h.toLowerCase());
+      const key=resolveDrugName(h);
       if(key) buildGraph(key);
     };
     c.appendChild(chip);
@@ -458,11 +450,11 @@ function addToSaved(){
   const inp=document.getElementById("saved-input"),val=inp.value.trim();
   if(!val||savedList.includes(val))return;
   savedList.push(val);renderSavedList();refreshGraph();inp.value="";
-  pushSavedToCloud();
+  pushSavedToCloud();   // BACKEND ADD-ON: sync when logged in
 }
 function removeFromSaved(name){
   savedList=savedList.filter(s=>s!==name);renderSavedList();refreshGraph();
-  pushSavedToCloud();
+  pushSavedToCloud();   // BACKEND ADD-ON: sync when logged in
 }
 function renderSavedList(){
   const c=document.getElementById("saved-list-items");c.innerHTML="";
@@ -577,31 +569,35 @@ function renderD3(nodes,links,rootName){
     .velocityDecay(0.55)   // smoother, slower settle
     .alphaDecay(0.03);     // longer spring animation
 
-  const defs=svg.select("defs").empty()?svg.append("defs"):svg.select("defs");
-  ["severe","moderate","mild"].forEach(sev=>{
-    const col=sev==="severe"?"#c0392b":sev==="moderate"?"#d48600":"#27ae60";
-    if(svg.select(`#arrow-${sev}`).empty()){
-      defs.append("marker").attr("id",`arrow-${sev}`)
-        .attr("viewBox","0 -5 10 10").attr("refX",22).attr("refY",0)
-        .attr("markerWidth",6).attr("markerHeight",6).attr("orient","auto")
-        .append("path").attr("d","M0,-5L10,0L0,5").attr("fill",col).attr("opacity",.8);
-    }
-  });
-
   const edgeColor=s=>s==="severe"?"#c0392b":s==="moderate"?"#d48600":"#27ae60";
-  const edgeWidth=s=>s==="severe"?2.8:s==="moderate"?2:1.6;
+  // Severity is encoded by COLOR ONLY — all lines share the same width so the
+  // only visual difference between severities is the stroke color (see legend).
+  const EDGE_WIDTH=2.5;
   const dashArray =t=>t==="Hematologic"?"none":t==="Metabolic"?"10,4":t==="Cardiovascular"?"5,3":"2,5";
 
-  const linkSel=g.append("g").selectAll("line").data(links).join("line")
-    .attr("stroke",d=>edgeColor(d.severity))
-    .attr("stroke-width",d=>edgeWidth(d.severity))
-    .attr("stroke-dasharray",d=>dashArray(d.type))
+  // Each edge is a <g> with two lines: a wide, invisible "hit area" line that
+  // makes the thin edge easy to click, and the visible colored line on top.
+  const linkG=g.append("g").selectAll("g.edge").data(links).join("g").attr("class","edge")
+    .attr("cursor","pointer")
     .attr("opacity",0)   // start invisible, fade in
-    .attr("marker-end",d=>`url(#arrow-${d.severity})`)
+    .on("click",(event,d)=>{event.stopPropagation();resetIdle();showInteractionCard(d);})
     .on("mouseover",(event,d)=>showTooltip(event,
       `<b>${d.source.id||d.source} ↔ ${d.target.id||d.target}</b><br/>
-       <span style="color:#b8d4a8">${d.severity.toUpperCase()} · ${d.type}</span><br/>${d.desc}`))
+       <span style="color:#b8d4a8">${d.severity.toUpperCase()} · ${d.type}</span><br/>${d.desc}
+       <br/><span style="color:#8fbe7c;font-size:.72rem">Click line for full details</span>`))
     .on("mouseout",hideTooltip);
+
+  // Invisible wide hit area for easy clicking.
+  const hitSel=linkG.append("line")
+    .attr("stroke","transparent")
+    .attr("stroke-width",14);
+
+  // Visible colored line (color = severity, dash = interaction type).
+  const linkSel=linkG.append("line")
+    .attr("stroke",d=>edgeColor(d.severity))
+    .attr("stroke-width",EDGE_WIDTH)
+    .attr("stroke-dasharray",d=>dashArray(d.type))
+    .attr("pointer-events","none");
 
   const nodeG=g.append("g").selectAll("g").data(nodes).join("g")
     .attr("cursor","pointer")
@@ -634,8 +630,9 @@ function renderD3(nodes,links,rootName){
   simulation.on("tick",()=>{
     // Update position cache while simulation runs
     nodes.forEach(n=>{posCache[n.id]={x:n.x,y:n.y};});
-    linkSel.attr("x1",d=>d.source.x).attr("y1",d=>d.source.y)
-            .attr("x2",d=>d.target.x).attr("y2",d=>d.target.y);
+    linkG.selectAll("line")
+      .attr("x1",d=>d.source.x).attr("y1",d=>d.source.y)
+      .attr("x2",d=>d.target.x).attr("y2",d=>d.target.y);
     nodeG.attr("transform",d=>`translate(${d.x},${d.y})`);
   });
 
@@ -648,12 +645,12 @@ function renderD3(nodes,links,rootName){
     // Fade in new
     g.transition().duration(FADE_MS).delay(FADE_MS*0.5).attr("opacity",1);
     // Nodes/edges fade in slightly later for a spring-reveal feel
-    linkSel.transition().duration(500).delay(FADE_MS*0.6).attr("opacity",.82);
+    linkG.transition().duration(500).delay(FADE_MS*0.6).attr("opacity",.82);
     nodeG.transition().duration(500).delay(FADE_MS*0.7).attr("opacity",1);
   } else {
     // First load — just appear
     g.attr("opacity",1);
-    linkSel.transition().duration(400).attr("opacity",.82);
+    linkG.transition().duration(400).attr("opacity",.82);
     nodeG.transition().duration(400).attr("opacity",1);
   }
 
@@ -667,11 +664,124 @@ function renderD3(nodes,links,rootName){
   startRotation();
 }
 
-// ─── INFO CARD ────────────────────────────────────────────────────────────────
-function showInfoCard(drug){
-  const panel=document.getElementById("info-panel");
-  panel.style.display="flex";panel.style.flexDirection="column";
+// ─── INFO CARDS (dynamic vertical stack) ───────────────────────────────────────
+// The panel holds an ordered stack of cards. Each card is an object
+// {id, html, size}. size is the user-dragged flex-basis in px (null = auto/even).
+// Cards render top→bottom with a draggable divider between each adjacent pair,
+// and every card carries its own ✕ Close button.
+let cardStack = [];
 
+// External-link ("arrow out of box") icon markup, replacing the old 📎.
+function extIcon(){
+  return `<svg class="ext-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>`;
+}
+function srcLink(href,label){
+  return `<a class="src-link" href="${href}" target="_blank" rel="noopener">${label} ${extIcon()}</a>`;
+}
+
+function renderPanel(){
+  const panel=document.getElementById("info-panel");
+  if(!cardStack.length){ panel.style.display="none"; panel.innerHTML=""; return; }
+  panel.style.display="flex";
+  panel.innerHTML="";
+  cardStack.forEach((card,i)=>{
+    if(i>0){
+      const dv=document.createElement("div");
+      dv.className="card-divider"; dv.title="Drag to resize";
+      dv.dataset.above=cardStack[i-1].id; dv.dataset.below=card.id;
+      dv.addEventListener("mousedown",startDividerDrag);
+      panel.appendChild(dv);
+    }
+    const el=document.createElement("div");
+    el.className="info-card"; el.id="card-"+card.id;
+    el.innerHTML=card.html;
+    // Respect a user-dragged size if present; otherwise share space evenly.
+    el.style.flex = card.size!=null ? `0 0 ${card.size}px` : "1 1 0";
+    panel.appendChild(el);
+  });
+}
+
+function openCard(id, html){
+  const existing=cardStack.find(c=>c.id===id);
+  if(existing){ existing.html=html; }
+  else { cardStack.push({id, html, size:null}); }
+  // Opening/closing resets any manual sizing so the new set shares evenly.
+  cardStack.forEach(c=>c.size=null);
+  renderPanel();
+}
+function closeCard(id){
+  cardStack=cardStack.filter(c=>c.id!==id);
+  cardStack.forEach(c=>c.size=null);
+  renderPanel();
+}
+function clearCards(){ cardStack=[]; renderPanel(); }
+
+// Divider drag — resizes the two adjacent cards it sits between.
+let _drag=null;
+function startDividerDrag(e){
+  e.preventDefault();
+  const dv=e.currentTarget;
+  const aboveEl=document.getElementById("card-"+dv.dataset.above);
+  const belowEl=document.getElementById("card-"+dv.dataset.below);
+  _drag={aboveId:dv.dataset.above, belowId:dv.dataset.below,
+         startY:e.clientY, aboveH:aboveEl.offsetHeight, belowH:belowEl.offsetHeight};
+  document.body.style.cursor="row-resize";
+}
+document.addEventListener("mousemove",e=>{
+  if(!_drag)return;
+  const dy=e.clientY-_drag.startY;
+  const min=70;
+  let newAbove=_drag.aboveH+dy, newBelow=_drag.belowH-dy;
+  if(newAbove<min){ newBelow-=(min-newAbove); newAbove=min; }
+  if(newBelow<min){ newAbove-=(min-newBelow); newBelow=min; }
+  const a=cardStack.find(c=>c.id===_drag.aboveId), b=cardStack.find(c=>c.id===_drag.belowId);
+  if(a)a.size=newAbove; if(b)b.size=newBelow;
+  const aEl=document.getElementById("card-"+_drag.aboveId), bEl=document.getElementById("card-"+_drag.belowId);
+  if(aEl)aEl.style.flex=`0 0 ${newAbove}px`;
+  if(bEl)bEl.style.flex=`0 0 ${newBelow}px`;
+});
+document.addEventListener("mouseup",()=>{if(_drag){_drag=null;document.body.style.cursor="";}});
+
+// ─── DRUGS.COM PHOTO GALLERY ───────────────────────────────────────────────────
+// Maps a brand/alt name to the Drugs.com image page that shows its pill/packaging
+// photos, plus a thumbnail. Drugs.com hotlink-protects images, so each tile links
+// to the real Drugs.com page and the thumbnail falls back to a labeled placeholder
+// if the remote image can't load — the hyperlink always works.
+function drugsComSlug(name){
+  return name.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"");
+}
+function drugsComImagePage(name){
+  return `https://www.drugs.com/image/${drugsComSlug(name)}-images.html`;
+}
+function drugsComThumb(name){
+  // Drugs.com image search thumbnail endpoint (falls back via onerror if blocked).
+  return `https://www.drugs.com/images/pills/custom/search.jpg?q=${encodeURIComponent(name)}`;
+}
+// A single gallery tile: hyperlinked image + caption (brand + what it is).
+function galleryTile(brand, ingredient, cls, isPrimary){
+  const page=drugsComImagePage(brand);
+  const thumb=drugsComThumb(brand);
+  const sub = isPrimary ? (cls||ingredient) : `${cls||""}${cls&&ingredient?" · ":""}${ingredient||""}`;
+  const safeBrand=brand.replace(/'/g,"&#39;");
+  const fallback=`<div class="gthumb-fallback"><span>${safeBrand}<br/><span style="font-size:.62rem">photo on Drugs.com ${extIcon()}</span></span></div>`;
+  return `<a class="gphoto" href="${page}" target="_blank" rel="noopener" title="View ${safeBrand} photos on Drugs.com">
+      <img class="gthumb" src="${thumb}" alt="${safeBrand} packaging / pill"
+           onerror="this.outerHTML='${fallback.replace(/'/g,"&#39;").replace(/"/g,'&quot;')}'"/>
+      <div class="gcap"><b>${safeBrand}</b><br/><span class="gcap-sub">${sub}</span></div>
+    </a>`;
+}
+function galleryHTML(drug){
+  // Primary brand first, then each alternative name (same medication, other brands).
+  const alts=(drug.similar||[]).slice().sort();
+  const tiles=[ galleryTile(drug.id, drug.ingredient, drug.cls, true),
+                ...alts.map(name=>galleryTile(name, drug.ingredient, drug.cls, false)) ].join("");
+  return `
+      <div class="card-section-title">Photos — Pill &amp; Packaging <span style="text-transform:none;font-weight:400;color:#8a7e6a">(Drugs.com)</span></div>
+      <div class="gallery">${tiles}</div>`;
+}
+
+// Builds the shared drug-card markup (same visual format for every drug card).
+function drugCardHTML(drug){
   const rels=ALL_INTERACTIONS
     .filter(e=>e.source===drug.id||e.target===drug.id)
     .sort((a,b)=>({severe:0,moderate:1,mild:2}[a.severity]-({severe:0,moderate:1,mild:2}[b.severity])));
@@ -679,14 +789,14 @@ function showInfoCard(drug){
   const similarHTML=(drug.similar||[]).sort()
     .map(s=>`<span class="similar-chip" title="Same ingredient: ${drug.ingredient}">${s}</span>`).join("");
 
-  panel.innerHTML=`
+  return `
     <div class="card-top-bar">
-      <button class="close-panel-btn-top" onclick="document.getElementById('info-panel').style.display='none'">✕ Close</button>
+      <button class="close-panel-btn-top" onclick="closeCard('drug-${drug.id}')">✕ Close</button>
     </div>
     <div class="card-header">
       <div class="card-brand">
         ${drug.id}
-        <button class="pronunc-btn" onclick="pronounce('${drug.pronounce||drug.id}')" title="Pronounce">
+        <button class="pronunc-btn" onclick="pronounce('${drug.pronounce||drug.id}')" title="Pronounce ${drug.id}">
           🔊 ${drug.pronounce||drug.id}
         </button>
       </div>
@@ -694,12 +804,19 @@ function showInfoCard(drug){
     </div>
     <div class="card-body">
       <div class="card-section-title">Active Ingredient</div>
-      <div class="card-val">${drug.ingredient}</div>
+      <div class="ingredient-row">
+        <span class="card-val">${drug.ingredient}</span>
+        <button class="pronunc-btn ingredient" onclick="pronounce('${drug.ingredient.replace(/'/g,"\\'")}')" title="Pronounce ${drug.ingredient}">
+          🔊 Pronounce
+        </button>
+      </div>
 
       <div class="card-section-title">Description</div>
       <div class="card-val">${drug.desc}<br/>
-        <a class="src-link" href="${drug.citation}" target="_blank" rel="noopener">📎 NLM Source</a>
+        ${srcLink(drug.citation,"NLM Source")}
       </div>
+
+      ${galleryHTML(drug)}
 
       <div class="card-section-title">Same Medication — Other Brand Names</div>
       <div style="margin-top:4px">${similarHTML||'<span style="color:#8a7e6a;font-size:.8rem">None listed</span>'}</div>
@@ -717,11 +834,64 @@ function showInfoCard(drug){
             <span style="color:#7a6e5a;font-size:.7rem;margin-left:auto">${r.type}</span>
           </div>
           <div class="ic-sub">${r.desc}<br/>
-            <a class="src-link" href="${r.citation}" target="_blank" rel="noopener">📎 PubMed</a>
+            ${srcLink(r.citation,"View source")}
           </div>
         </div>`;
       }).join("")}
     </div>`;
+}
+
+// Open a drug info card (keyed by drug id so it won't duplicate).
+function showInfoCard(drug){
+  openCard("drug-"+drug.id, drugCardHTML(drug));
+}
+
+// Interaction card — same structural format as drug cards, describing the A↔B
+// interaction. Keyed by the (ordered) pair so it's unique in the stack.
+function interactionCardHTML(link){
+  const a=link.source.id||link.source;
+  const b=link.target.id||link.target;
+  const sevColor=link.severity==="severe"?"#c0392b":link.severity==="moderate"?"#d48600":"#27ae60";
+  const da=ALL_DRUGS[a]||{}, db=ALL_DRUGS[b]||{};
+  const id=interactionId(link);
+  return `
+    <div class="card-top-bar">
+      <button class="close-panel-btn-top" onclick="closeCard('${id}')">✕ Close</button>
+    </div>
+    <div class="card-header">
+      <div class="card-brand" style="font-size:.98rem">
+        ${a} <span style="color:#7a6e5a">↔</span> ${b}
+      </div>
+      <div class="card-class">
+        <span class="ic-badge ${link.severity}" style="margin-right:6px">${link.severity}</span>
+        ${link.type} interaction
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="card-section-title">Severity</div>
+      <div class="card-val"><span style="color:${sevColor};font-weight:700">${link.severity.toUpperCase()}</span></div>
+
+      <div class="card-section-title">Interaction Type</div>
+      <div class="card-val">${link.type}</div>
+
+      <div class="card-section-title">Drugs Involved</div>
+      <div style="margin-top:4px">
+        <span class="similar-chip" title="${da.ingredient||''}" onclick="buildGraph('${a}')">${a}${da.ingredient?' — '+da.ingredient:''}</span>
+        <span class="similar-chip" title="${db.ingredient||''}" onclick="buildGraph('${b}')">${b}${db.ingredient?' — '+db.ingredient:''}</span>
+      </div>
+
+      <div class="card-section-title">What Happens</div>
+      <div class="card-val">${link.desc}<br/>
+        ${srcLink(link.citation,"View source")}
+      </div>
+    </div>`;
+}
+function interactionId(link){
+  const a=link.source.id||link.source, b=link.target.id||link.target;
+  return "inter-"+a+"-"+b;
+}
+function showInteractionCard(link){
+  openCard(interactionId(link), interactionCardHTML(link));
 }
 
 // ─── TOOLTIP ──────────────────────────────────────────────────────────────────
@@ -738,23 +908,53 @@ function searchInteraction(){
 
   if(!d1||!d2){srTitle.textContent="Enter both drug names";srBody.textContent="";sr.style.display="block";return;}
 
-  const match=ALL_INTERACTIONS.find(e=>
-    (e.source.toLowerCase()===d1.toLowerCase()&&e.target.toLowerCase()===d2.toLowerCase())||
-    (e.source.toLowerCase()===d2.toLowerCase()&&e.target.toLowerCase()===d1.toLowerCase())
-  );
+  // Resolve alternative brand names / ingredients to canonical drug keys so that
+  // e.g. "Coumadin" (a brand of Warfarin) or "Motrin" (Advil) pull up the graph.
+  const key1=resolveDrugName(d1), key2=resolveDrugName(d2);
+  const isAlt1 = key1 && key1.toLowerCase()!==d1.toLowerCase();  // entered an alternative name
+  const isAlt2 = key2 && key2.toLowerCase()!==d2.toLowerCase();
+  const anyAlt = isAlt1 || isAlt2;
+
+  const match=(key1&&key2)?ALL_INTERACTIONS.find(e=>
+    (e.source===key1&&e.target===key2)||(e.source===key2&&e.target===key1)
+  ):null;
+
+  // When either entered name is an alternative (not a direct DB hit), clear the
+  // panel and surface the equivalent DB cards so the user sees the equivalence:
+  //  • the drug card for each searched drug we recognize
+  //  • the interaction card between the two (in our DB names), if one exists
+  //  • if BOTH names are alternatives, both drug cards are shown
+  if(anyAlt){
+    clearCards();
+    // 1 & 3: show the canonical drug card for each name the user entered as an
+    //        ALTERNATIVE — that's where the equivalence needs to be revealed.
+    //        If both names were alternatives, both drug cards are shown.
+    //        (A name typed exactly as our DB name needs no equivalence card.)
+    const toShow=[];
+    if(isAlt1) toShow.push(key1);
+    if(isAlt2 && key2!==key1) toShow.push(key2);
+    toShow.forEach(k=>{ if(ALL_DRUGS[k]) showInfoCard(Object.assign({id:k}, ALL_DRUGS[k])); });
+    // 2: interaction card between the two searched drugs, if they interact.
+    if(match) showInteractionCard(match);
+    // Center the graph on the first resolved drug for context.
+    buildGraph(key1||key2, true);
+  }
 
   if(match){
     const col=match.severity==="severe"?"#c0392b":match.severity==="moderate"?"#d48600":"#27ae60";
+    const noteA = isAlt1 ? ` <span style="color:#7a6e5a;font-size:.78rem">(you typed “${d1}”)</span>`:"";
+    const noteB = isAlt2 ? ` <span style="color:#7a6e5a;font-size:.78rem">(you typed “${d2}”)</span>`:"";
     srTitle.innerHTML=`${match.source} ↔ ${match.target}`;
-    srBody.innerHTML=`<span style="color:${col};font-weight:700">${match.severity.toUpperCase()}</span> · ${match.type}<br/><br/>
-      ${match.desc}<br/><a class="src-link" href="${match.citation}" target="_blank" rel="noopener">📎 PubMed</a>`;
+    srBody.innerHTML=`<span style="color:${col};font-weight:700">${match.severity.toUpperCase()}</span> · ${match.type}${noteA}${noteB}<br/><br/>
+      ${match.desc}<br/>${srcLink(match.citation,"View source")}`;
     if(history[history.length-1]!==`${d1}+${d2}`)history.push(`${d1}+${d2}`);
-    buildGraph(match.source);
+    if(!anyAlt) buildGraph(match.source);
   }else{
     srTitle.textContent="No interaction found";
-    srBody.innerHTML=`No recorded interaction between <b>${d1}</b> and <b>${d2}</b> in ODMAP.`;
-    const key=Object.keys(ALL_DRUGS).find(k=>k.toLowerCase()===d1.toLowerCase());
-    if(key)buildGraph(key);
+    const shown1=key1?`<b>${key1}</b>${isAlt1?` (“${d1}”)`:""}`:`<b>${d1}</b>`;
+    const shown2=key2?`<b>${key2}</b>${isAlt2?` (“${d2}”)`:""}`:`<b>${d2}</b>`;
+    srBody.innerHTML=`No recorded interaction between ${shown1} and ${shown2} in ODMAP.`;
+    if(!anyAlt){ if(key1)buildGraph(key1); else if(key2)buildGraph(key2); }
   }
   sr.style.display="block";
 }
@@ -762,7 +962,7 @@ function searchInteraction(){
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&(document.activeElement.id==="drug1"||document.activeElement.id==="drug2"))searchInteraction();});
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
-window.onload  = ()=>{ buildGraph("Warfarin"); initAuth(); };
+window.onload  = ()=>{ buildGraph("Warfarin"); initAuth(); };   // BACKEND ADD-ON: initAuth
 window.onresize= ()=>buildGraph(currentRoot,true);
 </script>
 </body>
