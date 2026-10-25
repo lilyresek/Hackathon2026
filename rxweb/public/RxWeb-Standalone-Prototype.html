@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RxWeb - Visual Thesaurus Drug Interaction Radial Network</title>
+  <meta name="description" content="Visual Thesaurus (Thinkmap) radial drug interaction explorer with click-to-re-center mechanics, live history trail, and prescription cabinet safety scan.">
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- vis-network CDN -->
+  <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; }
+    .vis-network { outline: none; }
+    .code-font { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body class="bg-[#F8FAFC] text-slate-800 antialiased h-screen flex flex-col overflow-hidden select-none">
+
+  <!-- Top Navigation Bar: Visual Thesaurus Style Header -->
+  <header class="h-14 bg-white border-b border-slate-200 px-4 md:px-6 flex items-center justify-between gap-4 z-30 shrink-0">
+    <!-- Brand Title -->
+    <div class="flex items-center gap-2.5 whitespace-nowrap shrink-0">
+      <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-sky-600 to-cyan-500 text-white flex items-center justify-center font-bold text-sm tracking-tight shadow-xs">Rx</div>
+      <span class="text-lg font-bold text-slate-900 tracking-tight">RxWeb</span>
+      <span class="text-xs text-slate-400 hidden sm:inline">·</span>
+      <span class="text-xs text-slate-500 hidden lg:inline font-medium">Visual Thesaurus Radial Map</span>
+    </div>
+
+    <!-- Center: Prominent Visual Thesaurus Search Bar with Autocomplete -->
+    <div class="flex-1 max-w-md relative">
+      <div class="relative">
+        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔍</span>
+        <input
+          id="mainSearchInput"
+          type="text"
+          oninput="handleSearchInput(this.value)"
+          onfocus="handleSearchFocus()"
+          onkeydown="handleSearchKeyDown(event)"
+          placeholder="Search medication (e.g., Warfarin, Lipitor, Zoloft)..."
+          class="w-full text-xs bg-slate-50 border border-slate-200 focus:border-sky-500 focus:bg-white pl-8 pr-8 py-2 rounded-xl outline-none transition-all placeholder:text-slate-400"
+        />
+        <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold">✕</button>
+      </div>
+
+      <!-- Autocomplete Dropdown -->
+      <div id="searchDropdown" class="hidden absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden divide-y divide-slate-100 max-h-72 overflow-y-auto"></div>
+    </div>
+
+    <!-- Right Header Controls -->
+    <div class="flex items-center gap-3 shrink-0">
+      <button onclick="openPairModal()" class="hidden md:inline-flex px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl shadow-xs transition-colors">
+        Pair Checker
+      </button>
+      <button onclick="openDataModal()" class="hidden md:inline-flex px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl shadow-xs transition-colors">
+        Datasets
+      </button>
+      <button onclick="openCabinetModal()" class="px-3.5 py-1.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-xl shadow-xs transition-colors flex items-center gap-1.5">
+        <span>My Prescriptions</span>
+        <span id="navCabinetCount" class="w-4 h-4 rounded-full bg-sky-500 text-[10px] text-white flex items-center justify-center font-mono">3</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Visual Thesaurus History Trail & Radial Status Strip -->
+  <div class="h-10 bg-slate-50 border-b border-slate-200/80 px-4 md:px-6 flex items-center justify-between text-xs text-slate-500 overflow-x-auto whitespace-nowrap shrink-0">
+    <!-- Left: History Back/Forward + Breadcrumb Path -->
+    <div class="flex items-center gap-2">
+      <div class="flex items-center gap-1">
+        <button id="btnHistBack" onclick="navigateHistoryBack()" title="Back in Exploration History" class="p-1 px-2 rounded-lg border text-xs font-semibold transition-all bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300 disabled:opacity-40 disabled:cursor-not-allowed">
+          ← Back
+        </button>
+        <button id="btnHistForward" onclick="navigateHistoryForward()" title="Forward in Exploration History" class="p-1 px-2 rounded-lg border text-xs font-semibold transition-all bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300 disabled:opacity-40 disabled:cursor-not-allowed">
+          Forward →
+        </button>
+      </div>
+
+      <span class="w-px h-4 bg-slate-300 mx-1"></span>
+
+      <div class="flex items-center gap-1.5 text-[11px]">
+        <span class="text-slate-400 font-medium">Trail:</span>
+        <div id="historyBreadcrumbs" class="flex items-center gap-1"></div>
+      </div>
+    </div>
+
+    <!-- Right: Cabinet Safety Status -->
+    <div id="cabinetConflictStatus" class="text-[11px] font-semibold text-emerald-700">
+      ✓ Cabinet Ready
+    </div>
+  </div>
+
+  <!-- Main Viewport Split -->
+  <div class="flex-1 flex overflow-hidden relative">
+    <!-- Network Canvas Viewport -->
+    <div class="flex-1 h-full relative">
+      <!-- Toolbar Overlay -->
+      <div class="absolute top-4 left-4 right-4 z-10 flex items-center justify-between pointer-events-none">
+        <div class="flex items-center gap-2 pointer-events-auto">
+          <div class="bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-200 shadow-xs text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-sky-600"></span>
+            <span id="centerDrugBadge">Warfarin</span>
+            <span class="text-slate-400 font-normal">·</span>
+            <span id="radiatingSpokeCount" class="text-sky-700 font-bold">5 Radiating Spokes</span>
+          </div>
+        </div>
+
+        <!-- Right Toolbar Buttons -->
+        <div class="flex items-center gap-2 pointer-events-auto">
+          <!-- Severity Filter -->
+          <div class="bg-white/95 backdrop-blur-md border border-slate-200 rounded-xl p-1 shadow-xs flex items-center text-[11px]">
+            <button onclick="setFilter('all')" id="filterAllBtn" class="px-2 py-0.5 rounded-lg font-semibold bg-slate-900 text-white">All</button>
+            <button onclick="setFilter('severe')" id="filterSevBtn" class="px-2 py-0.5 rounded-lg font-semibold text-slate-600 hover:text-slate-900">Severe Only</button>
+          </div>
+
+          <!-- Cross Links Toggle -->
+          <button onclick="toggleCrossLinks()" id="crossLinksBtn" class="px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-white/95 border border-sky-300 text-sky-800 shadow-xs">
+            Cross Links
+          </button>
+
+          <!-- Zoom & Center -->
+          <div class="flex items-center bg-white/95 backdrop-blur-md border border-slate-200 rounded-xl p-1 shadow-xs text-xs">
+            <button onclick="zoomIn()" class="px-2 py-0.5 hover:bg-slate-100 rounded">+</button>
+            <button onclick="zoomOut()" class="px-2 py-0.5 hover:bg-slate-100 rounded">-</button>
+            <button onclick="fitGraph()" class="px-2.5 py-0.5 hover:bg-slate-100 rounded font-semibold text-slate-700">Recenter</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Graph Canvas -->
+      <div id="networkCanvas" class="w-full h-full bg-[#F8FAFC]"></div>
+
+      <!-- Bottom Floating Helper -->
+      <div class="absolute bottom-4 right-4 z-10 pointer-events-auto bg-white/95 backdrop-blur-md border border-slate-200 rounded-2xl p-3 text-xs shadow-md max-w-xs space-y-1">
+        <div class="font-bold text-[11px] uppercase tracking-wider text-sky-700">
+          Visual Thesaurus Radial Engine
+        </div>
+        <p class="text-[11px] text-slate-500 leading-snug">
+          Click any orbiting medication node to smoothly re-center the network map around it.
+        </p>
+      </div>
+
+      <!-- Legend -->
+      <div class="absolute bottom-4 left-4 z-10 pointer-events-auto bg-white/95 backdrop-blur-md border border-slate-200 rounded-2xl p-3 text-xs shadow-md max-w-sm space-y-1.5">
+        <div class="font-bold text-slate-800 text-[11px] uppercase">Severity Vectors</div>
+        <div class="flex items-center gap-3 text-[11px] text-slate-600">
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> Severe</span>
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span> Moderate</span>
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span> Minor</span>
+        </div>
+        <div class="flex items-center gap-3 text-[10px] text-slate-500 pt-1 border-t border-slate-100">
+          <span>— Direct Synergistic</span>
+          <span>- - Metabolic Interference</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Inspector / Definition Card Sidebar -->
+    <aside id="inspectorSidebar" class="w-80 md:w-96 bg-white border-l border-slate-200 h-full p-5 overflow-y-auto flex flex-col justify-between shrink-0 shadow-lg z-20">
+      <div id="inspectorContent" class="space-y-4"></div>
+      <div class="text-[11px] text-slate-400 text-center border-t border-slate-100 pt-3">
+        RxWeb Visual Thesaurus Pharmacological Model
+      </div>
+    </aside>
+  </div>
+
+  <!-- Pair Checker Modal -->
+  <div id="pairModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+    <div class="bg-white rounded-2xl max-w-lg w-full border border-slate-200 shadow-2xl p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="font-bold text-base text-slate-900">Interaction Pair Checker</h3>
+        <button onclick="closePairModal()" class="text-slate-400 hover:text-slate-600">✕</button>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Medication A</label>
+          <select id="selectDrugA" onchange="checkPairInteraction()" class="w-full text-xs p-2.5 border rounded-xl bg-slate-50 border-slate-200"></select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Medication B</label>
+          <select id="selectDrugB" onchange="checkPairInteraction()" class="w-full text-xs p-2.5 border rounded-xl bg-slate-50 border-slate-200"></select>
+        </div>
+      </div>
+      <div id="pairResult" class="p-4 rounded-xl border bg-slate-50 border-slate-200 text-xs">
+        Select medications above to query interaction severity.
+      </div>
+    </div>
+  </div>
+
+  <!-- Personal Cabinet Modal -->
+  <div id="cabinetModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+    <div class="bg-white rounded-2xl max-w-lg w-full border border-slate-200 shadow-2xl p-6 space-y-4 max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3 shrink-0">
+        <div>
+          <h3 class="font-bold text-base text-slate-900">My Prescriptions Cabinet</h3>
+          <p class="text-xs text-slate-500">Live safety scan of saved prescriptions against negative interaction clusters.</p>
+        </div>
+        <button onclick="closeCabinetModal()" class="text-slate-400 hover:text-slate-600">✕</button>
+      </div>
+      <div class="flex gap-2 shrink-0">
+        <select id="cabinetAddSelect" class="flex-1 text-xs p-2 border rounded-xl bg-slate-50 border-slate-200"></select>
+        <button onclick="addMedicationToCabinet()" class="px-4 py-2 bg-sky-600 text-white rounded-xl text-xs font-semibold hover:bg-sky-700">Add</button>
+      </div>
+      <div id="cabinetScanCard" class="p-4 rounded-xl border text-xs shrink-0"></div>
+      <div id="cabinetList" class="divide-y divide-slate-100 overflow-y-auto flex-1 text-xs border rounded-xl"></div>
+    </div>
+  </div>
+
+  <!-- Dataset Pipeline Modal -->
+  <div id="dataModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+    <div class="bg-white rounded-2xl max-w-xl w-full border border-slate-200 shadow-2xl p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div>
+          <h3 class="font-bold text-base text-slate-900">Dataset Loading Pipeline</h3>
+          <p class="text-xs text-slate-500">Paste or load custom JSON drug networks.</p>
+        </div>
+        <button onclick="closeDataModal()" class="text-slate-400 hover:text-slate-600">✕</button>
+      </div>
+      <textarea id="customDataInput" placeholder="Paste custom drug and interaction JSON..." rows="6" class="w-full text-xs font-mono p-3 border rounded-xl bg-slate-50 border-slate-200"></textarea>
+      <div class="flex justify-end gap-2">
+        <button onclick="closeDataModal()" class="px-3.5 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button>
+        <button onclick="loadCustomData()" class="px-4 py-1.5 bg-sky-600 text-white rounded-xl text-xs font-semibold hover:bg-sky-700">Load into Graph</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Embedded Client Script -->
+  <script>
+    let ACTIVE_DRUGS = [
+      { id: "warfarin", brandName: "Warfarin", genericName: "Warfarin Sodium", category: "Anticoagulant", description: "Potent prescription blood thinner used to prevent pulmonary embolism and stroke.", commonSideEffects: ["Bruising", "Bleeding", "Nosebleeds"], patientAdvice: "Requires regular INR blood monitoring. Avoid excess Vitamin K.", fdaBoxedWarning: true, boxedWarningSummary: "Can cause major or fatal bleeding." },
+      { id: "aspirin", brandName: "Aspirin", genericName: "Acetylsalicylic acid", category: "NSAID", description: "Antiplatelet pain reliever and cardiovascular thrombotic prophylaxis agent.", commonSideEffects: ["Heartburn", "Stomach upset", "Easy bruising"], patientAdvice: "Take with food or water.", fdaBoxedWarning: false },
+      { id: "lipitor", brandName: "Lipitor", genericName: "Atorvastatin", category: "Statin", description: "Cholesterol-lowering statin that reduces risk of myocardial infarction.", commonSideEffects: ["Muscle aches", "Joint pain", "Diarrhea"], patientAdvice: "Report unexplained muscle soreness promptly.", fdaBoxedWarning: false },
+      { id: "zoloft", brandName: "Zoloft", genericName: "Sertraline", category: "SSRI", description: "Antidepressant for major depressive disorder and panic disorder.", commonSideEffects: ["Nausea", "Insomnia", "Drowsiness"], patientAdvice: "Do not stop abruptly without doctor guidance.", fdaBoxedWarning: true, boxedWarningSummary: "Suicidality risk in young adults under 25." },
+      { id: "tramadol", brandName: "Tramadol", genericName: "Tramadol (Ultram)", category: "Opioid & SNRI", description: "Dual-action opioid and serotonin blocker for moderate to severe pain.", commonSideEffects: ["Drowsiness", "Constipation", "Dizziness"], patientAdvice: "Risk of seizures and serotonin toxicity.", fdaBoxedWarning: true, boxedWarningSummary: "Addiction, respiratory depression." },
+      { id: "xanax", brandName: "Xanax", genericName: "Alprazolam", category: "Benzodiazepine", description: "GABA-A agonist for acute anxiety and panic disorders.", commonSideEffects: ["Sedation", "Ataxia", "Memory impairment"], patientAdvice: "Never mix with opioids or alcohol.", fdaBoxedWarning: true, boxedWarningSummary: "Profound sedation and respiratory arrest when combined with opioids." },
+      { id: "plavix", brandName: "Plavix", genericName: "Clopidogrel", category: "Antiplatelet", description: "Platelet aggregation inhibitor for coronary stent and stroke prevention.", commonSideEffects: ["Bruising", "Bleeding", "Rash"], patientAdvice: "Do not stop without cardiologist order." },
+      { id: "eliquis", brandName: "Eliquis", genericName: "Apixaban", category: "Factor Xa Inhibitor", description: "Direct oral anticoagulant that blocks Factor Xa to prevent clots.", commonSideEffects: ["Bleeding", "Anemia"], patientAdvice: "Take twice daily 12 hours apart." },
+      { id: "diflucan", brandName: "Diflucan", genericName: "Fluconazole", category: "Antifungal (CYP Inhibitor)", description: "Potent CYP2C9 and CYP3A4 inhibitor used for fungal infections.", commonSideEffects: ["Nausea", "Headache", "Abdominal discomfort"], patientAdvice: "Inform doctor of all co-medications." },
+      { id: "nitrostat", brandName: "Nitrostat", genericName: "Nitroglycerin", category: "Vasodilator", description: "Sublingual nitrate for acute angina and coronary vasodilation.", commonSideEffects: ["Headache", "Hypotension", "Dizziness"], patientAdvice: "Absolute contraindication with PDE5 inhibitors." },
+      { id: "viagra", brandName: "Viagra", genericName: "Sildenafil", category: "PDE5 Inhibitor", description: "Promotes cyclic GMP vasodilation for erectile dysfunction and PAH.", commonSideEffects: ["Flushing", "Headache", "Nasal congestion"], patientAdvice: "Never take with nitrates." },
+      { id: "lisinopril", brandName: "Lisinopril", genericName: "Lisinopril", category: "ACE Inhibitor", description: "Antihypertensive medication that lowers vascular resistance.", commonSideEffects: ["Dry cough", "Dizziness", "Hyperkalemia"], patientAdvice: "Avoid potassium salt substitutes." },
+      { id: "ibuprofen", brandName: "Ibuprofen", genericName: "Ibuprofen (Advil, Motrin)", category: "NSAID", description: "Anti-inflammatory pain reliever for fever and musculoskeletal pain.", commonSideEffects: ["GI distress", "Fluid retention", "Nausea"], patientAdvice: "Always take with food or milk." },
+      { id: "ambien", brandName: "Ambien", genericName: "Zolpidem", category: "Hypnotic", description: "GABA-A receptor positive modulator for insomnia.", commonSideEffects: ["Sleepwalking", "Dizziness", "Next-day drowsiness"], patientAdvice: "Take right before bed; allow 7-8 hours sleep." },
+      { id: "tylenol", brandName: "Tylenol", genericName: "Acetaminophen", category: "Analgesic", description: "Non-opioid analgesic and antipyretic for mild pain and fever.", commonSideEffects: ["Nausea (rare)"], patientAdvice: "Do not exceed 4,000 mg/day across all products." }
+    ];
+
+    let ACTIVE_INTERACTIONS = [
+      { id: "w-a", drug1: "warfarin", drug2: "aspirin", severity: "severe", mechanismType: "synergistic", title: "Severe Hemorrhage & Bleeding", description: "Combining anticoagulant with antiplatelet creates severe additive bleeding risk.", clinicalRationale: "Aspirin blocks platelet thromboxane A2 while Warfarin depletes Vitamin K clotting factors.", patientActionableAdvice: "Avoid taking Aspirin with Warfarin unless specifically ordered by cardiologist." },
+      { id: "w-d", drug1: "warfarin", drug2: "diflucan", severity: "severe", mechanismType: "metabolic", title: "CYP2C9 Blockade Causing INR Spike", description: "Fluconazole blocks warfarin breakdown, doubling or tripling INR within 48 hours.", clinicalRationale: "Fluconazole is a potent CYP2C9 inhibitor.", patientActionableAdvice: "Doctor must reduce warfarin dose and perform immediate INR checks." },
+      { id: "w-i", drug1: "warfarin", drug2: "ibuprofen", severity: "severe", mechanismType: "synergistic", title: "Gastrointestinal Bleed & Erosion", description: "NSAIDs disrupt gastric protective mucosa while warfarin impairs hemostatic clotting.", clinicalRationale: "Dual mucosal erosion and systemic anticoagulation.", patientActionableAdvice: "Never take ibuprofen while on blood thinners without physician supervision." },
+      { id: "w-p", drug1: "warfarin", drug2: "plavix", severity: "severe", mechanismType: "synergistic", title: "Dual Coagulation Pathway Blockade", description: "Dual therapy creates major hemorrhagic risk without rigorous specialist monitoring.", clinicalRationale: "Simultaneous inhibition of platelet aggregation and plasma fibrin formation.", patientActionableAdvice: "Seek emergency care for black tarry stools or uncontrollable bleeding." },
+      { id: "z-t", drug1: "zoloft", drug2: "tramadol", severity: "severe", mechanismType: "synergistic", title: "Life-Threatening Serotonin Syndrome", description: "Both medications raise serotonin levels, risking tremors, hyperthermia, and seizures.", clinicalRationale: "Dual serotonergic load stimulates 5-HT receptors to toxic degrees.", patientActionableAdvice: "Seek emergency care immediately if experiencing high fever or shaking." },
+      { id: "n-v", drug1: "nitrostat", drug2: "viagra", severity: "severe", mechanismType: "synergistic", title: "Fatal Blood Pressure Collapse", description: "Absolute contraindication: unchecked cGMP drops blood pressure to zero.", clinicalRationale: "Nitrates stimulate cGMP production while sildenafil blocks its breakdown.", patientActionableAdvice: "Never take Nitroglycerin within 24-48 hours of Viagra under any circumstance." },
+      { id: "l-d", drug1: "lipitor", drug2: "diflucan", severity: "severe", mechanismType: "metabolic", title: "CYP3A4 Inhibition Causing Rhabdomyolysis", description: "Fluconazole triples Lipitor blood levels, risking severe muscle breakdown.", clinicalRationale: "CYP3A4 inhibition prevents atorvastatin clearance.", patientActionableAdvice: "Pause Lipitor temporarily while taking Diflucan." },
+      { id: "x-a", drug1: "xanax", drug2: "ambien", severity: "severe", mechanismType: "synergistic", title: "Respiratory Depression & Coma Risk", description: "Concurrent benzodiazepine and Z-drug hypnotic causes profound CNS collapse.", clinicalRationale: "Additive GABA-A hyperpolarization.", patientActionableAdvice: "Never combine multiple sedatives." },
+      { id: "lis-i", drug1: "lisinopril", drug2: "ibuprofen", severity: "moderate", mechanismType: "clearance", title: "Blunted BP Control & Kidney Strain", description: "NSAIDs inhibit renal prostaglandins, opposing ACE inhibitors.", clinicalRationale: "Hemodynamic mismatch decreases glomerular filtration rate.", patientActionableAdvice: "Avoid chronic NSAID use while on blood pressure medication." },
+      { id: "a-i", drug1: "aspirin", drug2: "ibuprofen", severity: "moderate", mechanismType: "synergistic", title: "Cardioprotection Blockade & Ulcers", description: "Ibuprofen physically obstructs aspirin from binding to platelet COX-1.", clinicalRationale: "Competitive steric hindrance at cyclooxygenase active site.", patientActionableAdvice: "Take Aspirin at least 30 minutes before Ibuprofen." }
+    ];
+
+    // State Variables
+    let network = null;
+    let nodesDataSet = null;
+    let edgesDataSet = null;
+    let centerDrugId = 'warfarin';
+    let historyTrail = ['warfarin'];
+    let historyIndex = 0;
+    let myCabinet = ['warfarin', 'aspirin', 'lipitor'];
+    let currentFilter = 'all';
+    let showCrossLinks = true;
+
+    // Initialize from URL hash if available
+    function checkHash() {
+      if (window.location.hash.startsWith('#drug=')) {
+        const id = window.location.hash.replace('#drug=', '').toLowerCase();
+        if (ACTIVE_DRUGS.some(d => d.id === id)) {
+          return id;
+        }
+      }
+      return 'warfarin';
+    }
+
+    // Visual Thesaurus Radial Builder
+    function renderVisualThesaurus(targetDrugId, recordHistory = true) {
+      const drug = ACTIVE_DRUGS.find(d => d.id === targetDrugId) || ACTIVE_DRUGS[0];
+      centerDrugId = drug.id;
+
+      if (recordHistory) {
+        historyTrail = historyTrail.slice(0, historyIndex + 1);
+        historyTrail.push(centerDrugId);
+        historyIndex = historyTrail.length - 1;
+        window.location.hash = '#drug=' + centerDrugId;
+      }
+
+      updateHistoryUI();
+
+      // Find interacting neighbors
+      let directInteractions = ACTIVE_INTERACTIONS.filter(i => i.drug1 === centerDrugId || i.drug2 === centerDrugId);
+      if (currentFilter === 'severe') {
+        directInteractions = directInteractions.filter(i => i.severity === 'severe');
+      }
+
+      const spokeMap = new Map();
+      directInteractions.forEach(inter => {
+        const otherId = inter.drug1 === centerDrugId ? inter.drug2 : inter.drug1;
+        const otherDrug = ACTIVE_DRUGS.find(d => d.id === otherId);
+        if (otherDrug && !spokeMap.has(otherId)) {
+          spokeMap.set(otherId, { drug: otherDrug, interaction: inter });
+        }
+      });
+
+      const spokeList = Array.from(spokeMap.values());
+      const N = spokeList.length;
+
+      document.getElementById('centerDrugBadge').innerText = drug.brandName;
+      document.getElementById('radiatingSpokeCount').innerText = N + ' Radiating Spokes';
+
+      // 1. Center Node (Fixed at 0, 0)
+      const isCenterInCab = myCabinet.includes(drug.id);
+      const centerNode = {
+        id: drug.id,
+        x: 0,
+        y: 0,
+        fixed: { x: true, y: true },
+        shape: 'circle',
+        size: 42,
+        label: drug.brandName, // STRICT PLAIN TEXT
+        title: '[Center Focus]\\n' + drug.brandName + ' (' + drug.genericName + ')\\n' + drug.category + '\\n' + N + ' interacting spokes radiating',
+        font: { size: 14, face: 'Plus Jakarta Sans', color: '#FFFFFF', bold: true },
+        color: { background: isCenterInCab ? '#BE123C' : '#0284C7', border: isCenterInCab ? '#9F1239' : '#0369A1' },
+        borderWidth: 3.5,
+        shadow: { enabled: true, color: 'rgba(2, 132, 199, 0.4)', size: 16 }
+      };
+
+      // 2. Radial Spokes (Distributed evenly on a ring)
+      const radius = N > 10 ? 250 : N > 5 ? 210 : 170;
+      const spokeNodes = spokeList.map((spoke, idx) => {
+        const angle = (2 * Math.PI * idx) / Math.max(1, N) - Math.PI / 2;
+        const posX = Math.round(radius * Math.cos(angle));
+        const posY = Math.round(radius * Math.sin(angle));
+        const inCab = myCabinet.includes(spoke.drug.id);
+        const isSevere = spoke.interaction.severity === 'severe';
+
+        return {
+          id: spoke.drug.id,
+          x: posX,
+          y: posY,
+          shape: 'circle',
+          size: inCab ? 32 : 28,
+          label: spoke.drug.brandName, // STRICT PLAIN TEXT
+          title: '[Click to Re-Center Web]\\n' + spoke.drug.brandName + ' (' + spoke.drug.genericName + ')\\n' + spoke.drug.category + '\\nSeverity with ' + drug.brandName + ': ' + spoke.interaction.severity.toUpperCase(),
+          font: { size: 11, face: 'Plus Jakarta Sans', color: inCab ? '#9F1239' : '#0F172A', bold: true },
+          color: {
+            background: inCab ? '#FFF1F2' : '#FFFFFF',
+            border: inCab ? '#E11D48' : isSevere ? '#EF4444' : '#F97316'
+          },
+          borderWidth: inCab ? 3 : 2,
+          shadow: { enabled: true, color: inCab ? 'rgba(225, 29, 72, 0.25)' : 'rgba(0,0,0,0.06)', size: inCab ? 10 : 4 }
+        };
+      });
+
+      const allNodes = [centerNode, ...spokeNodes];
+
+      // 3. Radial Vector Edges
+      const radialEdges = spokeList.map(spoke => {
+        const isSevere = spoke.interaction.severity === 'severe';
+        const isMetabolic = spoke.interaction.mechanismType === 'metabolic';
+
+        return {
+          id: 'rad-' + spoke.interaction.id,
+          from: drug.id,
+          to: spoke.drug.id,
+          title: spoke.interaction.title + '\\nSeverity: ' + spoke.interaction.severity.toUpperCase() + '\\nClick to inspect clinical mechanism',
+          color: isSevere ? '#EF4444' : spoke.interaction.severity === 'moderate' ? '#F97316' : '#EAB308',
+          width: spoke.interaction.mechanismType === 'synergistic' ? 3.5 : 2.5,
+          dashes: isMetabolic ? [6, 4] : false,
+          smooth: { enabled: true, type: 'curvedCW', roundness: 0.1 },
+          data: spoke.interaction
+        };
+      });
+
+      // 4. Secondary Cross-Links between Spokes
+      const crossEdges = [];
+      if (showCrossLinks && N > 1) {
+        const spokeIds = new Set(spokeList.map(s => s.drug.id));
+        ACTIVE_INTERACTIONS.forEach(inter => {
+          if (inter.drug1 !== drug.id && inter.drug2 !== drug.id) {
+            if (spokeIds.has(inter.drug1) && spokeIds.has(inter.drug2)) {
+              crossEdges.push({
+                id: 'cross-' + inter.id,
+                from: inter.drug1,
+                to: inter.drug2,
+                title: '[Cross-Interaction between Spokes]\\n' + inter.title + '\\nSeverity: ' + inter.severity.toUpperCase(),
+                color: { color: inter.severity === 'severe' ? 'rgba(239, 68, 68, 0.45)' : 'rgba(249, 115, 22, 0.45)' },
+                width: 1.5,
+                dashes: [3, 3],
+                smooth: { enabled: true, type: 'curvedCCW', roundness: 0.22 },
+                data: inter
+              });
+            }
+          }
+        });
+      }
+
+      const allEdges = [...radialEdges, ...crossEdges];
+
+      const container = document.getElementById('networkCanvas');
+      nodesDataSet = new vis.DataSet(allNodes);
+      edgesDataSet = new vis.DataSet(allEdges);
+
+      const options = {
+        physics: {
+          enabled: true,
+          solver: 'barnesHut',
+          minVelocity: 0.75,
+          maxVelocity: 22,
+          timestep: 0.5,
+          barnesHut: {
+            springLength: 170,
+            gravitationalConstant: -1200,
+            centralGravity: 0.2,
+            damping: 0.55,
+            avoidOverlap: 0.65
+          },
+          stabilization: { enabled: true, iterations: 120, updateInterval: 25, fit: true }
+        },
+        interaction: { hover: true, tooltipDelay: 100 }
+      };
+
+      if (network) {
+        network.destroy();
+      }
+      network = new vis.Network(container, { nodes: nodesDataSet, edges: edgesDataSet }, options);
+
+      // Freeze physics once initial radial arrangement stabilizes
+      network.once('stabilized', () => {
+        network.setOptions({ physics: { enabled: false } });
+      });
+      network.once('stabilizationIterationsDone', () => {
+        network.setOptions({ physics: { enabled: false } });
+      });
+
+      // Click: Click-to-re-center mechanics!
+      network.on('click', (params) => {
+        if (params.nodes.length > 0) {
+          const clickedId = params.nodes[0];
+          if (clickedId === centerDrugId) {
+            inspectDrug(clickedId);
+          } else {
+            // Animate towards node then re-center!
+            try {
+              const pos = network.getPosition(clickedId);
+              network.moveTo({ position: pos, scale: 1.15, animation: { duration: 250, easingFunction: 'easeInOutQuad' } });
+            } catch (e) {}
+            setTimeout(() => {
+              renderVisualThesaurus(clickedId, true);
+              inspectDrug(clickedId);
+            }, 180);
+          }
+        } else if (params.edges.length > 0) {
+          const edgeId = params.edges[0];
+          const edge = edgesDataSet.get(edgeId);
+          if (edge && edge.data) {
+            inspectInteraction(edge.data);
+          }
+        }
+      });
+
+      inspectDrug(centerDrugId);
+      updateCabinetUI();
+    }
+
+    // Inspect Drug in Sidebar
+    function inspectDrug(drugId) {
+      const drug = ACTIVE_DRUGS.find(d => d.id === drugId);
+      if (!drug) return;
+
+      const content = document.getElementById('inspectorContent');
+      const inCab = myCabinet.includes(drug.id);
+      const isCenter = drug.id === centerDrugId;
+
+      // Find interacting neighbors
+      const directInteractions = ACTIVE_INTERACTIONS.filter(i => i.drug1 === drug.id || i.drug2 === drug.id);
+
+      content.innerHTML = `
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <span class="text-[10px] font-bold text-sky-700 uppercase tracking-wide px-2 py-0.5 bg-sky-50 rounded border border-sky-200">${drug.category}</span>
+            ${isCenter ? '<span class="text-[10px] font-bold text-sky-800 bg-sky-100 px-2 py-0.5 rounded">CENTER FOCUS</span>' : ''}
+          </div>
+          <h2 class="text-xl font-bold text-slate-900">${drug.brandName}</h2>
+          <div class="text-xs text-slate-500 font-mono">Active: ${drug.genericName}</div>
+        </div>
+
+        ${!isCenter ? `
+          <button onclick="reCenterFromSidebar('${drug.id}')" class="w-full py-2 px-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-xs">
+            <span>Re-Center Visual Thesaurus Web on ${drug.brandName}</span>
+          </button>
+        ` : ''}
+
+        <button onclick="toggleCabinetMed('${drug.id}')" class="w-full py-2 px-3 text-xs font-semibold rounded-xl border transition-all ${inCab ? 'bg-amber-50 text-amber-800 border-amber-300' : 'bg-slate-900 text-white'}">
+          ${inCab ? '✓ Saved in Prescriptions Cabinet' : '+ Add to Prescriptions Cabinet'}
+        </button>
+
+        ${drug.fdaBoxedWarning ? `
+          <div class="p-3.5 bg-rose-50 text-rose-950 border border-rose-200 rounded-xl text-xs leading-relaxed">
+            <strong class="text-rose-800 block uppercase font-bold text-[10px] mb-0.5">⚠️ FDA Boxed Warning:</strong>
+            ${drug.boxedWarningSummary}
+          </div>
+        ` : ''}
+
+        <div>
+          <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Clinical Overview</span>
+          <div class="text-xs text-slate-600 leading-relaxed">${drug.description}</div>
+        </div>
+
+        <div>
+          <span class="text-[10px] uppercase font-bold text-slate-700 block mb-1.5">Common Side Effects</span>
+          <div class="flex flex-wrap gap-1">
+            ${(drug.commonSideEffects || []).map(s => '<span class="px-2 py-0.5 bg-slate-100 text-slate-700 text-xs rounded-md font-medium">' + s + '</span>').join('')}
+          </div>
+        </div>
+
+        <div class="bg-sky-50/70 p-3 rounded-xl border border-sky-100 text-xs text-sky-950">
+          <strong class="block text-[10px] uppercase text-sky-800 font-bold mb-0.5">Patient Usage Guidance:</strong>
+          ${drug.patientAdvice}
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[10px] uppercase font-bold text-slate-700">Radiating Negative Interactions (${directInteractions.length})</span>
+            <span class="text-[10px] text-slate-400">Click to jump</span>
+          </div>
+          <div class="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+            ${directInteractions.map(inter => {
+              const otherId = inter.drug1 === drug.id ? inter.drug2 : inter.drug1;
+              const other = ACTIVE_DRUGS.find(d => d.id === otherId);
+              if (!other) return '';
+              const isSev = inter.severity === 'severe';
+              return `
+                <div class="p-2.5 rounded-lg border border-slate-200 bg-white hover:border-sky-300 hover:bg-slate-50 transition-all flex items-center justify-between">
+                  <div class="flex-1 min-w-0 mr-2">
+                    <div class="flex items-center gap-1.5">
+                      <span class="w-2 h-2 rounded-full ${isSev ? 'bg-red-500' : 'bg-orange-500'}"></span>
+                      <button onclick="reCenterFromSidebar('${other.id}')" class="text-xs font-bold text-slate-800 hover:text-sky-700 truncate text-left">
+                        ${other.brandName}
+                      </button>
+                    </div>
+                    <div class="text-[11px] text-slate-500 truncate pl-3.5">${inter.title}</div>
+                  </div>
+                  <button onclick="inspectInteractionById('${inter.id}')" class="text-[11px] font-semibold text-sky-600 hover:underline shrink-0">Details</button>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // Inspect Interaction Details in Sidebar
+    function inspectInteraction(inter) {
+      if (!inter) return;
+      const content = document.getElementById('inspectorContent');
+      const drugA = ACTIVE_DRUGS.find(d => d.id === inter.drug1);
+      const drugB = ACTIVE_DRUGS.find(d => d.id === inter.drug2);
+      const isSev = inter.severity === 'severe';
+
+      content.innerHTML = `
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded uppercase text-white ${isSev ? 'bg-red-600' : 'bg-orange-500'}">
+            ${inter.severity} Risk Interaction
+          </span>
+          <button onclick="inspectDrug('${centerDrugId}')" class="text-xs text-slate-400 hover:text-slate-600 font-semibold">✕ Close</button>
+        </div>
+
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs flex items-center justify-between">
+          <button onclick="reCenterFromSidebar('${inter.drug1}')" class="font-bold text-slate-900 hover:text-sky-700">${drugA ? drugA.brandName : inter.drug1}</button>
+          <span class="font-bold text-slate-400">⇄</span>
+          <button onclick="reCenterFromSidebar('${inter.drug2}')" class="font-bold text-slate-900 hover:text-sky-700">${drugB ? drugB.brandName : inter.drug2}</button>
+        </div>
+
+        <div class="p-3.5 rounded-xl border ${isSev ? 'bg-red-50 border-red-200 text-red-950' : 'bg-orange-50 border-orange-200 text-orange-950'}">
+          <h3 class="text-sm font-bold">${inter.title}</h3>
+          <p class="text-xs mt-1 leading-relaxed">${inter.description}</p>
+        </div>
+
+        <div>
+          <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Pharmacological Mechanism</span>
+          <div class="text-xs text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-200 font-mono leading-relaxed">
+            ${inter.clinicalRationale}
+          </div>
+        </div>
+
+        <div class="text-xs bg-sky-50 p-3.5 rounded-xl border border-sky-200 text-sky-950">
+          <span class="text-[10px] uppercase font-bold text-sky-800 block mb-1">Patient Action Guidance:</span>
+          ${inter.patientActionableAdvice}
+        </div>
+      `;
+    }
+
+    function inspectInteractionById(interId) {
+      const inter = ACTIVE_INTERACTIONS.find(i => i.id === interId);
+      if (inter) inspectInteraction(inter);
+    }
+
+    function reCenterFromSidebar(drugId) {
+      renderVisualThesaurus(drugId, true);
+    }
+
+    // History Trail Navigation (Visual Thesaurus Navigation)
+    function navigateHistoryBack() {
+      if (historyIndex > 0) {
+        historyIndex--;
+        const targetId = historyTrail[historyIndex];
+        renderVisualThesaurus(targetId, false);
+        window.location.hash = '#drug=' + targetId;
+      }
+    }
+
+    function navigateHistoryForward() {
+      if (historyIndex < historyTrail.length - 1) {
+        historyIndex++;
+        const targetId = historyTrail[historyIndex];
+        renderVisualThesaurus(targetId, false);
+        window.location.hash = '#drug=' + targetId;
+      }
+    }
+
+    function updateHistoryUI() {
+      const btnBack = document.getElementById('btnHistBack');
+      const btnFwd = document.getElementById('btnHistForward');
+      if (btnBack) btnBack.disabled = historyIndex <= 0;
+      if (btnFwd) btnFwd.disabled = historyIndex >= historyTrail.length - 1;
+
+      const bc = document.getElementById('historyBreadcrumbs');
+      if (bc) {
+        const recent = historyTrail.slice(Math.max(0, historyTrail.length - 4));
+        bc.innerHTML = recent.map((id, idx) => {
+          const d = ACTIVE_DRUGS.find(x => x.id === id);
+          if (!d) return '';
+          const isCurr = id === centerDrugId;
+          return `
+            <button onclick="renderVisualThesaurus('${d.id}', true)" class="px-2 py-0.5 rounded font-semibold transition-colors ${isCurr ? 'bg-sky-100 text-sky-800 border border-sky-300' : 'text-slate-600 hover:text-slate-900'}">
+              ${d.brandName}
+            </button>
+            ${idx < recent.length - 1 ? '<span class="text-slate-300 font-bold">›</span>' : ''}
+          `;
+        }).join('');
+      }
+    }
+
+    // Top Search Autocomplete
+    function handleSearchInput(val) {
+      const q = val.trim().toLowerCase();
+      const drop = document.getElementById('searchDropdown');
+      const clearBtn = document.getElementById('clearSearchBtn');
+
+      if (!q) {
+        drop.classList.add('hidden');
+        clearBtn.classList.add('hidden');
+        return;
+      }
+
+      clearBtn.classList.remove('hidden');
+      const matches = ACTIVE_DRUGS.filter(d =>
+        d.brandName.toLowerCase().includes(q) ||
+        d.genericName.toLowerCase().includes(q) ||
+        d.category.toLowerCase().includes(q)
+      ).slice(0, 8);
+
+      if (matches.length === 0) {
+        drop.innerHTML = '<div class="p-3 text-xs text-slate-400 italic">No matching medications found.</div>';
+      } else {
+        drop.innerHTML = matches.map(d => `
+          <button onclick="selectSearchResult('${d.id}')" class="w-full p-2.5 text-left text-xs hover:bg-sky-50 flex items-center justify-between transition-colors">
+            <div>
+              <div class="font-bold text-slate-900">${d.brandName}</div>
+              <div class="text-[11px] text-slate-500 font-mono">${d.genericName} · ${d.category}</div>
+            </div>
+            <span class="text-[10px] text-sky-600 font-semibold">Center Web →</span>
+          </button>
+        `).join('');
+      }
+      drop.classList.remove('hidden');
+    }
+
+    function handleSearchFocus() {
+      const val = document.getElementById('mainSearchInput').value;
+      if (val.trim()) handleSearchInput(val);
+    }
+
+    function handleSearchKeyDown(e) {
+      if (e.key === 'Enter') {
+        const drop = document.getElementById('searchDropdown');
+        const firstBtn = drop.querySelector('button');
+        if (firstBtn) firstBtn.click();
+      } else if (e.key === 'Escape') {
+        document.getElementById('searchDropdown').classList.add('hidden');
+      }
+    }
+
+    function selectSearchResult(drugId) {
+      renderVisualThesaurus(drugId, true);
+      clearSearch();
+    }
+
+    function clearSearch() {
+      const input = document.getElementById('mainSearchInput');
+      input.value = '';
+      document.getElementById('searchDropdown').classList.add('hidden');
+      document.getElementById('clearSearchBtn').classList.add('hidden');
+    }
+
+    // Toolbar Options
+    function setFilter(filterType) {
+      currentFilter = filterType;
+      document.getElementById('filterAllBtn').className = filterType === 'all' ? 'px-2 py-0.5 rounded-lg font-semibold bg-slate-900 text-white' : 'px-2 py-0.5 rounded-lg font-semibold text-slate-600 hover:text-slate-900';
+      document.getElementById('filterSevBtn').className = filterType === 'severe' ? 'px-2 py-0.5 rounded-lg font-semibold bg-red-600 text-white' : 'px-2 py-0.5 rounded-lg font-semibold text-slate-600 hover:text-slate-900';
+      renderVisualThesaurus(centerDrugId, false);
+    }
+
+    function toggleCrossLinks() {
+      showCrossLinks = !showCrossLinks;
+      const btn = document.getElementById('crossLinksBtn');
+      btn.className = showCrossLinks ? 'px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-white/95 border border-sky-300 text-sky-800 shadow-xs' : 'px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 border border-slate-200 text-slate-500 shadow-xs';
+      renderVisualThesaurus(centerDrugId, false);
+    }
+
+    function zoomIn() { if (network) network.moveTo({ scale: network.getScale() * 1.25 }); }
+    function zoomOut() { if (network) network.moveTo({ scale: network.getScale() * 0.8 }); }
+    function fitGraph() { if (network) network.moveTo({ position: { x: 0, y: 0 }, scale: 1.0, animation: { duration: 400, easingFunction: 'easeInOutQuad' } }); }
+
+    // Prescriptions Cabinet Logic
+    function updateCabinetUI() {
+      document.getElementById('navCabinetCount').innerText = myCabinet.length;
+      const list = document.getElementById('cabinetList');
+      if (list) {
+        list.innerHTML = myCabinet.map(id => {
+          const d = ACTIVE_DRUGS.find(x => x.id === id);
+          if (!d) return '';
+          return `<div class="p-2.5 flex items-center justify-between"><div><strong>${d.brandName}</strong> <span class="text-slate-400 font-mono">(${d.genericName})</span></div><button onclick="removeMedicationFromCabinet('${id}')" class="text-red-500 hover:text-red-700">Remove</button></div>`;
+        }).join('');
+      }
+
+      let conflicts = [];
+      for (let i = 0; i < myCabinet.length; i++) {
+        for (let j = i + 1; j < myCabinet.length; j++) {
+          const match = ACTIVE_INTERACTIONS.find(m => (m.drug1 === myCabinet[i] && m.drug2 === myCabinet[j]) || (m.drug1 === myCabinet[j] && m.drug2 === myCabinet[i]));
+          if (match) conflicts.push(match);
+        }
+      }
+
+      const scan = document.getElementById('cabinetScanCard');
+      const statusText = document.getElementById('cabinetConflictStatus');
+      if (conflicts.length > 0) {
+        if (scan) {
+          scan.className = 'p-4 rounded-xl border bg-red-50 border-red-200 text-red-950';
+          scan.innerHTML = '<div class="font-bold text-sm">⚠️ ' + conflicts.length + ' Negative Interaction Conflict(s) Detected in Cabinet!</div>' + conflicts.map(c => '<div class="mt-1 text-xs">• ' + c.title + ' (' + c.severity.toUpperCase() + ')</div>').join('');
+        }
+        if (statusText) {
+          statusText.className = 'text-[11px] font-semibold text-rose-600';
+          statusText.innerText = '⚠️ ' + conflicts.length + ' Cabinet Conflicts!';
+        }
+      } else {
+        if (scan) {
+          scan.className = 'p-4 rounded-xl border bg-emerald-50 border-emerald-200 text-emerald-950';
+          scan.innerHTML = '<strong>✓ All Clear:</strong> No known direct interaction clashes in your current list.';
+        }
+        if (statusText) {
+          statusText.className = 'text-[11px] font-semibold text-emerald-700';
+          statusText.innerText = '✓ Cabinet Safe';
+        }
+      }
+    }
+
+    function toggleCabinetMed(id) {
+      if (myCabinet.includes(id)) {
+        myCabinet = myCabinet.filter(x => x !== id);
+      } else {
+        myCabinet.push(id);
+      }
+      updateCabinetUI();
+      renderVisualThesaurus(centerDrugId, false);
+      inspectDrug(id);
+    }
+
+    function addMedicationToCabinet() {
+      const id = document.getElementById('cabinetAddSelect').value;
+      if (id && !myCabinet.includes(id)) {
+        myCabinet.push(id);
+        updateCabinetUI();
+        renderVisualThesaurus(centerDrugId, false);
+      }
+    }
+
+    function removeMedicationFromCabinet(id) {
+      myCabinet = myCabinet.filter(x => x !== id);
+      updateCabinetUI();
+      renderVisualThesaurus(centerDrugId, false);
+    }
+
+    // Pair Checker
+    function populateDropdowns() {
+      const a = document.getElementById('selectDrugA');
+      const b = document.getElementById('selectDrugB');
+      const c = document.getElementById('cabinetAddSelect');
+      if (!a || !b || !c) return;
+      a.innerHTML = '';
+      b.innerHTML = '';
+      c.innerHTML = '';
+      ACTIVE_DRUGS.forEach(d => {
+        a.add(new Option(d.brandName, d.id));
+        b.add(new Option(d.brandName, d.id));
+        c.add(new Option(d.brandName, d.id));
+      });
+      if (b.options.length > 1) b.selectedIndex = 1;
+      checkPairInteraction();
+    }
+
+    function checkPairInteraction() {
+      const idA = document.getElementById('selectDrugA').value;
+      const idB = document.getElementById('selectDrugB').value;
+      const res = document.getElementById('pairResult');
+      if (!res) return;
+      if (idA === idB) {
+        res.innerHTML = '<span class="text-slate-400">Select two different medications.</span>';
+        return;
+      }
+      const match = ACTIVE_INTERACTIONS.find(i => (i.drug1 === idA && i.drug2 === idB) || (i.drug1 === idB && i.drug2 === idA));
+      if (match) {
+        res.className = 'p-4 rounded-xl border ' + (match.severity === 'severe' ? 'bg-red-50 border-red-200 text-red-950' : 'bg-orange-50 border-orange-200 text-orange-950');
+        res.innerHTML = '<div class="font-bold text-sm">' + match.severity.toUpperCase() + ': ' + match.title + '</div><p class="mt-1">' + match.description + '</p><div class="mt-2 flex gap-2"><button onclick="closePairModal(); selectSearchResult(\'' + idA + '\')" class="text-xs font-semibold underline">Center on ' + idA + '</button><button onclick="closePairModal(); selectSearchResult(\'' + idB + '\')" class="text-xs font-semibold underline">Center on ' + idB + '</button></div>';
+      } else {
+        res.className = 'p-4 rounded-xl border bg-emerald-50 border-emerald-200 text-emerald-950';
+        res.innerHTML = '<strong>No Direct Negative Interaction Found</strong> for this specific pair.';
+      }
+    }
+
+    // Modals
+    function openPairModal() { document.getElementById('pairModal').classList.remove('hidden'); populateDropdowns(); }
+    function closePairModal() { document.getElementById('pairModal').classList.add('hidden'); }
+    function openCabinetModal() { document.getElementById('cabinetModal').classList.remove('hidden'); populateDropdowns(); updateCabinetUI(); }
+    function closeCabinetModal() { document.getElementById('cabinetModal').classList.add('hidden'); }
+    function openDataModal() { document.getElementById('dataModal').classList.remove('hidden'); }
+    function closeDataModal() { document.getElementById('dataModal').classList.add('hidden'); }
+
+    function loadCustomData() {
+      const text = document.getElementById('customDataInput').value.trim();
+      if (!text) return;
+      try {
+        const parsed = JSON.parse(text);
+        if (parsed.drugs && parsed.interactions) {
+          ACTIVE_DRUGS = parsed.drugs;
+          ACTIVE_INTERACTIONS = parsed.interactions;
+          centerDrugId = ACTIVE_DRUGS[0].id;
+          historyTrail = [centerDrugId];
+          historyIndex = 0;
+          renderVisualThesaurus(centerDrugId, false);
+          closeDataModal();
+        }
+      } catch (e) {
+        alert('Invalid JSON syntax.');
+      }
+    }
+
+    // Sync with browser Back/Forward buttons
+    window.addEventListener('hashchange', () => {
+      const newId = checkHash();
+      if (newId !== centerDrugId) {
+        renderVisualThesaurus(newId, false);
+      }
+    });
+
+    // Close search dropdown on click outside
+    document.addEventListener('click', (e) => {
+      const searchBox = document.getElementById('mainSearchInput');
+      const dropdown = document.getElementById('searchDropdown');
+      if (searchBox && dropdown && !searchBox.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.add('hidden');
+      }
+    });
+
+    window.onload = function() {
+      centerDrugId = checkHash();
+      historyTrail = [centerDrugId];
+      historyIndex = 0;
+      renderVisualThesaurus(centerDrugId, false);
+      populateDropdowns();
+    };
+  </script>
+</body>
+</html>

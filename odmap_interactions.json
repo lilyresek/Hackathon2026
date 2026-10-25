@@ -1,0 +1,162 @@
+[
+  {
+    "drug_a": "Warfarin",
+    "drug_b": "Aspirin",
+    "severity": "severe",
+    "type": "Hematologic",
+    "citation": "https://labels.fda.gov/0cbce382-9c88-4f58-ae0f-532a841e8f95",
+    "desc": "Taking Aspirin with Warfarin significantly increases the risk of serious bleeding because both medications thin the blood through different mechanisms."
+  },
+  {
+    "drug_a": "Warfarin",
+    "drug_b": "Advil",
+    "severity": "moderate",
+    "type": "Hematologic",
+    "citation": "https://labels.fda.gov/0cbce382-9c88-4f58-ae0f-532a841e8f95",
+    "desc": "Advil can damage the stomach lining and impair blood clotting, which raises the risk of severe gastrointestinal bleeding when combined with Warfarin."
+  },
+  {
+    "drug_a": "Warfarin",
+    "drug_b": "Paxil",
+    "severity": "moderate",
+    "type": "Hematologic",
+    "citation": "https://labels.fda.gov/0cbce382-9c88-4f58-ae0f-532a841e8f95",
+    "desc": "Paxil can interfere with platelet function and blood protein binding, potentially increasing the risk of bleeding when taken with Warfarin."
+  },
+  {
+    "drug_a": "Warfarin",
+    "drug_b": "Prozac",
+    "severity": "moderate",
+    "type": "Hematologic",
+    "citation": "https://labels.fda.gov/0cbce382-9c88-4f58-ae0f-532a841e8f95",
+    "desc": "Prozac can inhibit the metabolism of Warfarin and reduce platelet aggregation, leading to higher blood levels of Warfarin and increased bleeding risk."
+  },
+  {
+    "drug_a": "Warfarin",
+    "drug_b": "Zoloft",
+    "severity": "moderate",
+    "type": "Hematologic",
+    "citation": "https://labels.fda.gov/0cbce382-9c88-4f58-ae0f-532a841e8f95",
+    "desc": "Zoloft may alter Warfarin blood concentrations and platelet activity, requiring closer monitoring of clotting times to avoid bleeding complications."
+  },
+  {
+    "drug_a": "Warfarin",
+    "drug_b": "Lipitor",
+    "severity": "moderate",
+    "type": "Metabolic",
+    "citation": "https://labels.fda.gov/0cbce382-9c88-4f58-ae0f-532a841e8f95",
+    "desc": "Lipitor weakly inhibits CYP3A4 enzymes that help break down Warfarin, which may slightly alter Warfarin levels and anticoagulation effects."
+  },
+  {
+    "drug_a": "Warfarin",
+    "drug_b": "Xanax",
+    "severity": "moderate",
+    "type": "Metabolic",
+    "citation": "https://labels.fda.gov/0cbce382-9c88-4f58-ae0f-532a841e8f95",
+    "desc": "Xanax can interact with metabolic enzymes responsible for clearing Warfarin, which may alter the effectiveness of your blood thinner."
+  },
+  {
+    "drug_a": "Warfarin",
+    "drug_b": "Amoxil",
+    "severity": "moderate",
+    "type": "Hematologic",
+    "citation": "https://labels.fda.gov/0cbce382-9c88-4f58-ae0f-532a841e8f95",
+    "desc": "Antibiotics like Amoxil can alter gut flora and blood clotting, potentially changing Warfarin levels and increasing bleeding risk."
+  },
+  {
+    "drug_a": "Lipitor",
+    "drug_b": "Lanoxin",
+    "severity": "moderate",
+    "type": "Cardiovascular",
+    "citation": "https://labels.fda.gov/00afce9b-48c9-487a-a738-e359c005c707",
+    "desc": "Lipitor can increase blood levels of Lanoxin, increasing the potential for digoxin-related heart toxicity."
+  },
+  {
+    "drug_a": "Paxil",
+    "drug_b": "Aspirin",
+    "severity": "moderate",
+    "type": "Hematologic",
+    "citation": "https://labels.fda.gov/009d8b89-eab9-43ba-b077-86bfa993a745",
+    "desc": "Combining Paxil and Aspirin increases the likelihood of gastrointestinal bleeding by additive impairment of platelet function."
+  },
+  {
+    "drug_a": "Paxil",
+    "drug_b": "Prozac",
+    "severity": "severe",
+    "type": "Neurological",
+    "citation": "https://labels.fda.gov/009d8b89-eab9-43ba-b077-86bfa993a745",
+    "desc": "Combining two SSRIs like Paxil and Prozac can cause excessively high serotonin levels, leading to a potentially life-threatening condition called serotonin syndrome."
+  },
+  {
+    "drug_a": "Paxil",
+    "drug_b": "Zoloft",
+    "severity": "severe",
+    "type": "Neurological",
+    "citation": "https://labels.fda.gov/009d8b89-eab9-43ba-b077-86bfa993a745",
+    "desc": "Taking Paxil together with Zoloft can dangerously increase serotonin levels in the brain and trigger serotonin syndrome."
+  },
+  {
+    "drug_a": "Prozac",
+    "drug_b": "Xanax",
+    "severity": "moderate",
+    "type": "Neurological",
+    "citation": "https://labels.fda.gov/02283de9-6087-45f7-a9ce-3b082ce860de",
+    "desc": "Prozac decreases the liver breakdown of Xanax, leading to elevated Xanax levels and increased sedation or motor impairment."
+  },
+  {
+    "drug_a": "Prozac",
+    "drug_b": "Aspirin",
+    "severity": "moderate",
+    "type": "Hematologic",
+    "citation": "https://labels.fda.gov/02283de9-6087-45f7-a9ce-3b082ce860de",
+    "desc": "Concurrent use of Prozac and Aspirin can weaken blood clotting ability and increase your risk of upper gastrointestinal bleeding."
+  },
+  {
+    "drug_a": "Prozac",
+    "drug_b": "Advil",
+    "severity": "moderate",
+    "type": "Hematologic",
+    "citation": "https://labels.fda.gov/02283de9-6087-45f7-a9ce-3b082ce860de",
+    "desc": "Combining Prozac and Advil substantially raises the risk of stomach ulcers and bleeding due to their combined effect on platelets and stomach protection."
+  },
+  {
+    "drug_a": "Prozac",
+    "drug_b": "Zoloft",
+    "severity": "severe",
+    "type": "Neurological",
+    "citation": "https://labels.fda.gov/02283de9-6087-45f7-a9ce-3b082ce860de",
+    "desc": "Using Prozac alongside Zoloft can cause severe additive serotonergic activity, increasing the danger of serotonin syndrome."
+  },
+  {
+    "drug_a": "Xanax",
+    "drug_b": "Lanoxin",
+    "severity": "moderate",
+    "type": "Cardiovascular",
+    "citation": "https://labels.fda.gov/02840ea6-e4a0-96a0-e063-6394a90a19ae",
+    "desc": "Xanax can reduce the clearance of Lanoxin, raising digoxin concentrations in the bloodstream and increasing the risk of toxicity."
+  },
+  {
+    "drug_a": "Metformin",
+    "drug_b": "Lanoxin",
+    "severity": "moderate",
+    "type": "Cardiovascular",
+    "citation": "https://labels.fda.gov/06ade2e1-5981-4e3d-b7e9-7ff083eb4551",
+    "desc": "Lanoxin and Metformin can compete for elimination in the kidneys, potentially raising Lanoxin levels and necessitating close monitoring."
+  },
+  {
+    "drug_a": "Lisinopril",
+    "drug_b": "Advil",
+    "severity": "moderate",
+    "type": "Cardiovascular",
+    "citation": "https://labels.fda.gov/00f67e1a-6999-4295-9c9f-fcb1ce9711b8",
+    "desc": "Advil can reduce the blood-pressure-lowering effect of Lisinopril and increase the risk of acute kidney impairment."
+  },
+  {
+    "drug_a": "Advil",
+    "drug_b": "Lanoxin",
+    "severity": "moderate",
+    "type": "Cardiovascular",
+    "citation": "https://labels.fda.gov/00653b7c-7099-487e-9a01-e89781c21323",
+    "desc": "Advil can decrease kidney function and reduce the clearance of Lanoxin, which may increase Lanoxin levels and toxicity."
+  }
+]

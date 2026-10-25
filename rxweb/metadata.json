@@ -1,0 +1,7 @@
+{
+  "name": "RxWeb - Drug Interaction Network Visualizer",
+  "description": "An interactive patient-facing word web and safety scanner for exploring drug-drug interactions, adverse risks, and personal prescription safety.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
